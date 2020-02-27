@@ -1,0 +1,25 @@
+server:
+  port: 8100
+
+spring:
+  http:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://47.100.30.181:3306/stell?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+
+  jackson:
+    time-zone: GMT+8
+
+logging:
+  config: classpath:logback.xml
+
+dev:
+  enable: true
+
