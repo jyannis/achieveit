@@ -18,3 +18,34 @@ type：
         merge :  纯粹分支合并
 
 如: [feat]增加成本中心授权人联动。
+&nbsp;
+&nbsp;
+# 开发注意事项
+### Controller
+1. Controller只做鉴权、验参、调用service，即使透传也不直接调用mapper。
+2. Controller方法返回值一致设为Object，便于切面后续调用封装为统一返回体。
+3. 每一个需要鉴权且不是鉴为项目经理（PROJECT_MANAGER）的控制层方法，都应该显式传projectId参数。
+projectId应该显式放在query中，不能在body里。
+&nbsp;
+### Service
+1. Service全部要做接口，接口上方法打注释写方法含义。
+2. 在每个方法上加doc注明@author和修改时间。如果整个类都是自己写的，可以不在方法上注明，转为在类上注明。
+3. 每个Service完成单元测试。覆盖度要求90%方法覆盖和代码覆盖，需要有mock。
+&nbsp;
+&nbsp;
+# 参考文档
+### 通用Mapper
+#### API
+https://mapperhelper.github.io/all/
+#### 检查通用Mapper的拼接是否符合预期
+从MySQL查阅执行的SQL语句。
+参考https://zhuanlan.zhihu.com/p/98641041
+&nbsp;
+&nbsp;
+# 版本号
+| 依赖 | 版本 |
+| ------ | ------ |
+| Java | 8 |
+| SpringBoot | 2.x |
+| MySQL | 5.7.* |
+
