@@ -1,5 +1,6 @@
 package com.ecnu2020.achieveit.shiro;
 
+import com.ecnu2020.achieveit.common.Page;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Staff;
 import com.ecnu2020.achieveit.service.StaffService;

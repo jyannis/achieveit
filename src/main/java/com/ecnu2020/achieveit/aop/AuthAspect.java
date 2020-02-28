@@ -72,17 +72,20 @@ public class AuthAspect {
         }
 
         //检查权限
-        //如果要求的role是项目经理就从员工表里匹配
-        if(acquireRole == RoleEnum.PROJECT_MANAGER){
+        //如果要求的role是项目经理，且没传projectId，说明正在新建项目，就从员工表里匹配
+        if(acquireRole == RoleEnum.PROJECT_MANAGER && projectId == null){
             if(!authService.checkManager(principal)){
                 throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
             }
+            //执行切点
+            Object object = proceedingJoinPoint.proceed();
+
+            //封装返回体
+            return Result.success(object);
         }
 
-
-        if(acquireRole != RoleEnum.PROJECT_MANAGER
-            && acquireRole != RoleEnum.NON){
-            //如果要求的role不是项目经理也不是NON，projectId就不应为null
+        //如果不满足“要求的role是项目经理，且没传projectId”，就一定传了projectId，从auth表里匹配
+        if(acquireRole != RoleEnum.NON){
             if(projectId == null){
                 throw new RRException(ExceptionTypeEnum.PROJECTID_MISSING);
             }
