@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import javax.annotation.Resource;
+import org.apache.shiro.authc.AuthenticationException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -76,6 +77,11 @@ public class GlobalExceptionHandler {
         if(e instanceof UnauthenticatedException){
             Result result = Result.result(ExceptionTypeEnum.LOGIN_INVALID);
             log.error("Unauth异常：" + ExceptionTypeEnum.LOGIN_INVALID.getCodeMessage());
+            return result;
+        }
+
+        if(e instanceof AuthenticationException){
+            Result result = Result.result(ExceptionTypeEnum.LOGIN_FAILED);
             return result;
         }
 

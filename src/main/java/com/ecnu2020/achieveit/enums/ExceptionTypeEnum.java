@@ -9,7 +9,8 @@ public enum ExceptionTypeEnum {
     LOGIN_INVALID(1001,"登录状态失效，请重新登录"),
     PROJECTID_MISSING(1002,"缺失项目id"),
     PROJECTID_INVALID(1003,"无效的项目id"),
-    PERMISSION_DENIED(1004,"权限不足");
+    PERMISSION_DENIED(1004,"权限不足"),
+    LOGIN_FAILED(1005,"登录校验失败");
 
 
 
