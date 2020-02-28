@@ -1,4 +1,4 @@
-package com.ecnu2020.achieveit.dto;
+package com.ecnu2020.achieveit.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,17 +6,17 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * session缓存实体
  * @author yan on 2020-02-27
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserDTO {
+public class MailManage {
+	private Integer id;
+	private String name;
+	private String creator;
+	private String staff;
 
-    private String id;
-    private String name;
-    private String department;
 
 }

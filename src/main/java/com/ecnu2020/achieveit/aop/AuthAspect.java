@@ -1,23 +1,29 @@
 package com.ecnu2020.achieveit.aop;
 
 import com.ecnu2020.achieveit.annotation.Auth;
+import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
 import com.ecnu2020.achieveit.common.Result;
 import com.ecnu2020.achieveit.enums.RoleEnum;
 import com.ecnu2020.achieveit.common.RRException;
+import com.ecnu2020.achieveit.service.AuthService;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.UnauthenticatedException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 
@@ -31,6 +37,8 @@ import java.lang.reflect.Method;
 @Slf4j
 public class AuthAspect {
 
+    @Autowired
+    AuthService authService;
 
     @Around("print()")
     @Transactional
@@ -39,22 +47,36 @@ public class AuthAspect {
         MethodSignature methodSignature = (MethodSignature) proceedingJoinPoint.getSignature();
         Method method = methodSignature.getMethod();
         Auth authAnnotation = method.getAnnotation(Auth.class);
+        if(authAnnotation == null){
+            //执行切点
+            Object object = proceedingJoinPoint.proceed();
+
+            //封装返回体
+            return Result.success(object);
+        }
         RoleEnum acquireRole = authAnnotation.role();
-        short acquireGitPerm = authAnnotation.gitPerm();
-        short acquireFilePerm = authAnnotation.filePerm();
-        short acquireTaskTimePerm = authAnnotation.taskTimePerm();
+        short acquireGitAuth = authAnnotation.gitAuth();
+        short acquireFileAuth = authAnnotation.fileAuth();
+        short acquireTaskTimeAuth = authAnnotation.taskTimeAuth();
 
         // 请求体 获取项目id
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attributes.getRequest();
 
-        String projectIdString = request.getParameter("projectId");
-        Integer projectId =  projectIdString == null ? null : Integer.parseInt(projectIdString);
+        String projectId = request.getParameter("projectId");
+
+
+        UserDTO principal = (UserDTO) SecurityUtils.getSubject().getPrincipal();
+        if(principal == null){
+            throw new UnauthenticatedException();
+        }
 
         //检查权限
         //如果要求的role是项目经理就从员工表里匹配
         if(acquireRole == RoleEnum.PROJECT_MANAGER){
-            //TODO 鉴权
+            if(!authService.checkManager(principal)){
+                throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
+            }
         }
 
 
@@ -64,8 +86,9 @@ public class AuthAspect {
             if(projectId == null){
                 throw new RRException(ExceptionTypeEnum.PROJECTID_MISSING);
             }
-
-            //TODO 鉴权
+            if(!authService.checkRole(acquireRole,acquireGitAuth,acquireFileAuth,acquireTaskTimeAuth,projectId,principal)){
+                throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
+            }
         }
 
         //此时权限校验已通过
