@@ -19,14 +19,12 @@ public @interface Auth {
     RoleEnum role() default RoleEnum.NON;
 
     //git读写权限 0=无权限 1=读 2=写
-    short gitPerm() default 0;
+    short gitAuth() default 0;
 
     //文件服务器读写权限
-    short filePerm() default 0;
+    short fileAuth() default 0;
 
     //工时登记权限
-    short taskTimePerm() default 0;
-
-
+    short taskTimeAuth() default 0;
 
 }

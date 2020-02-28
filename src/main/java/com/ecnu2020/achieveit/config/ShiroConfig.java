@@ -35,13 +35,6 @@ public class ShiroConfig {
         ShiroFilterFactoryBean shiroFilterFactoryBean = new ShiroFilterFactoryBean();
 
 
-//        //自定义过滤器
-//        Map<String, Filter> filters = shiroFilterFactoryBean.getFilters();
-//        // 注意这里不要用Bean的方式，否则会报错
-//        filters.put("myRole", new MyRoleFilter());
-//        shiroFilterFactoryBean.setFilters(filters);
-
-
         shiroFilterFactoryBean.setSecurityManager(securityManager);
         shiroFilterFactoryBean.setLoginUrl("/unauth");
         shiroFilterFactoryBean.setUnauthorizedUrl("/unauth");
@@ -52,14 +45,14 @@ public class ShiroConfig {
 
 
         //swagger2
-        hashMap.put("/swagger-ui.html", "anon");
-        hashMap.put("/swagger/**", "anon");
-        hashMap.put("/swagger-resources/**", "anon");
-        hashMap.put("/v2/**", "anon");
-        hashMap.put("/webjars/**", "anon");
-        hashMap.put("/configuration/**", "anon");
+//        hashMap.put("/swagger-ui.html", "anon");
+//        hashMap.put("/swagger/**", "anon");
+//        hashMap.put("/swagger-resources/**", "anon");
+//        hashMap.put("/v2/**", "anon");
+//        hashMap.put("/webjars/**", "anon");
+//        hashMap.put("/configuration/**", "anon");
 
-
+        hashMap.put("/**", "anon");
 
         shiroFilterFactoryBean.setFilterChainDefinitionMap(hashMap);
 
