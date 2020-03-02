@@ -6,6 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.Id;
+
 /**
  * @author yan on 2020-02-27
  */
@@ -14,6 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Auth{
+	@Id
 	private Integer id;
 	private String staffId;
 	private String projectId;
