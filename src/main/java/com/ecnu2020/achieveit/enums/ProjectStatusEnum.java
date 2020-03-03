@@ -9,8 +9,8 @@ import lombok.Getter;
 @Getter
 public enum ProjectStatusEnum {
 
-    BUILD("新建中"),
-    REVIEW("审核中"),
+    BUILD("申请立项"),
+    REVIEW("已立项"),
     REJECTED("已驳回"),
     ONGOING("进行中"),
     DELIVER("已交付"),
