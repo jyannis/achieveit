@@ -60,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void deleteMemberAuth(String projectId, String staffId, String roleName) {
         Auth auth = getAuth(projectId,staffId,roleName);
-        if(auth == null) throw new RRException(ExceptionTypeEnum.DELETE_FAIL);
+        if(auth == null) throw new RRException(ExceptionTypeEnum.INVALID_STAFF);
         authMapper.delete(auth);
     }
 
@@ -68,7 +68,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public Auth modMemberAuth(String projectId, String staffId, String roleName, short gitAuth, Short fileAuth, Short taskTimeAuth) {
         Auth auth = getAuth(projectId,staffId,roleName);
-        if(auth == null) throw new RRException(ExceptionTypeEnum.DELETE_FAIL);
+        if(auth == null) throw new RRException(ExceptionTypeEnum.INVALID_STAFF);
         Auth authExample = setAuth(projectId,staffId,roleName,gitAuth,fileAuth,taskTimeAuth);
         authExample.setId(auth.getId());
         authMapper.updateByPrimaryKey(authExample);
