@@ -163,11 +163,4 @@ public class ProjectServiceImpl implements ProjectService {
         return projectMapper.updateByPrimaryKey(old)>0;
     }
 
-    public static void main(String[] args) {
-//        String test="hhhhh";
-//        System.out.println(test.contains(null));
-        Project project=new Project();
-        project.setStatus("Sss");
-        System.out.println(project.toString());
-    }
 }
