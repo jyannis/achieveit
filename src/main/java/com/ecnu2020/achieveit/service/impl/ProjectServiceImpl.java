@@ -2,6 +2,7 @@ package com.ecnu2020.achieveit.service.impl;
 
 import com.ecnu2020.achieveit.common.RRException;
 import com.ecnu2020.achieveit.entity.Project;
+import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
 import com.ecnu2020.achieveit.enums.ProjectStatusEnum;
 import com.ecnu2020.achieveit.enums.RoleEnum;
@@ -54,7 +55,11 @@ public class ProjectServiceImpl implements ProjectService {
         Optional.ofNullable(staffMapper.selectByPrimaryKey(superiorId))
             .filter(staff -> staff.getManager().equals((short)1))
             .orElseThrow(()->new RRException(ExceptionTypeEnum.INVALID_STAFF));
-        authService.addMemberAuth(project.getId(),superiorId, RoleEnum.SUPERIOR.getRoleName(), (short) 2,(short)2,(short)1);
+        AddMemberReq addMemberReq = AddMemberReq.builder()
+                                    .staffId(superiorId).role(RoleEnum.SUPERIOR.getRoleName())
+                                    .fileAuth((short) 2).gitAuth((short) 2).taskTimeAuth((short)1)
+                                    .build();
+        authService.addMemberAuth(project.getId(),addMemberReq);
         projectMapper.insertSelective(project);
 
         //发送通知给项目上级

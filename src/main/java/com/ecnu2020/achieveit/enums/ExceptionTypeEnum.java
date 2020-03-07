@@ -19,6 +19,7 @@ public enum ExceptionTypeEnum {
     PROJECTID_REPEATED(1008,"项目ID重复"),
     INVALID_STATUS(1009,"无效的状态"),
     SERVER_ERROR(-1,"服务器内部异常"),
+    PROJECT_STATUS_ERROR(1010,"项目已结束，不能修改")
     ;
 
 

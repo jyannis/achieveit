@@ -5,19 +5,23 @@ import com.ecnu2020.achieveit.common.RRException;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.Staff;
+import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
+import com.ecnu2020.achieveit.entity.request_response.auth.DeleteMemberReq;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
+import com.ecnu2020.achieveit.enums.ProjectStatusEnum;
 import com.ecnu2020.achieveit.enums.RoleEnum;
 import com.ecnu2020.achieveit.mapper.AuthMapper;
+import com.ecnu2020.achieveit.mapper.ProjectMapper;
 import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.service.AuthService;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.github.pagehelper.PageInfo;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -27,6 +31,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     AuthMapper authMapper;
+
+    @Autowired
+    ProjectMapper projectMapper;
 
     @Override
     public Boolean checkManager(UserDTO principal) {
@@ -49,27 +56,30 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public Auth addMemberAuth(String projectId, String staffId, String roleName, short gitAuth, Short fileAuth, Short taskTimeAuth) {
-        if(getAuth(projectId,staffId,roleName)!= null) throw new RRException(ExceptionTypeEnum.ADD_FAIL);;
-        Auth authExample = setAuth(projectId,staffId,roleName,gitAuth,fileAuth,taskTimeAuth);
+    public Auth addMemberAuth(String projectId, AddMemberReq addMemberReq) {
+        if(!isProjectOver(projectId)) throw new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR);
+        if(getAuth(projectId,addMemberReq.getStaffId(),addMemberReq.getRole())!= null) throw new RRException(ExceptionTypeEnum.ADD_FAIL);
+        Auth authExample = setAuth(projectId,addMemberReq);
         authMapper.insertSelective(authExample);
         return authMapper.selectOne(authExample);
     }
 
     @Override
     @Transactional
-    public void deleteMemberAuth(String projectId, String staffId, String roleName) {
-        Auth auth = getAuth(projectId,staffId,roleName);
-        if(auth == null) throw new RRException(ExceptionTypeEnum.INVALID_STAFF);
+    public void deleteMemberAuth(String projectId, DeleteMemberReq deleteMemberReq) {
+        if(!isProjectOver(projectId)) throw new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR);
+        Auth auth = getAuth(projectId,deleteMemberReq.getStaffId(),deleteMemberReq.getRole());
+        Optional.ofNullable(auth).orElseThrow(()->new RRException(ExceptionTypeEnum.INVALID_STAFF));
         authMapper.delete(auth);
     }
 
     @Override
     @Transactional
-    public Auth modMemberAuth(String projectId, String staffId, String roleName, short gitAuth, Short fileAuth, Short taskTimeAuth) {
-        Auth auth = getAuth(projectId,staffId,roleName);
-        if(auth == null) throw new RRException(ExceptionTypeEnum.INVALID_STAFF);
-        Auth authExample = setAuth(projectId,staffId,roleName,gitAuth,fileAuth,taskTimeAuth);
+    public Auth modMemberAuth(String projectId,AddMemberReq addMemberReq){
+        if(!isProjectOver(projectId)) throw new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR);
+        Auth auth = getAuth(projectId,addMemberReq.getStaffId(),addMemberReq.getRole());
+        Optional.ofNullable(auth).orElseThrow(()->new RRException(ExceptionTypeEnum.INVALID_STAFF));
+        Auth authExample = setAuth(projectId,addMemberReq);
         authExample.setId(auth.getId());
         authMapper.updateByPrimaryKey(authExample);
         return authMapper.selectOne(authExample);
@@ -95,21 +105,51 @@ public class AuthServiceImpl implements AuthService {
         return page;
     }
 
-
-    private Auth getAuth(String projectId, String staffId, String roleName){
+    /**
+      * @Author Zc
+      * @Description 得到人员权限
+      * @Date 18:05 2020/3/4
+      * @Param [projectId, staffId, roleName]
+      * @return Auth
+    **/
+    public Auth getAuth(String projectId, String staffId, String roleName){
         Auth exampleAuth = Auth.builder()
                         .projectId(projectId).staffId(staffId).role(roleName)
                         .build();
         return authMapper.selectOne(exampleAuth);
     }
 
-    private Auth setAuth(String projectId, String staffId, String roleName,
-                           short gitAuth,short fileAuth,short taskTimeAuth){
+    /**
+      * @Author Zc
+      * @Description 新建Auth对象
+      * @Date 18:05 2020/3/4
+      * @Param [projectId, addMemberReq]
+      * @return Auth
+    **/
+    public Auth setAuth(String projectId,AddMemberReq addMemberReq){
         Auth exampleAuth = Auth.builder()
-                .projectId(projectId).staffId(staffId).role(roleName)
-                .gitAuth(gitAuth).taskTimeAuth(taskTimeAuth).fileAuth(fileAuth)
+                .projectId(projectId)
+                .staffId(addMemberReq.getStaffId())
+                .role(addMemberReq.getRole())
+                .gitAuth(addMemberReq.getGitAuth())
+                .taskTimeAuth(addMemberReq.getTaskTimeAuth())
+                .fileAuth(addMemberReq.getFileAuth())
                 .build();
         return exampleAuth;
     }
+
+    /**
+      * @Author Zc
+      * @Description 判断项目状态是否为已归档或已交付
+      * @Date 18:06 2020/3/4
+      * @Param [projectId]
+      * @return boolean
+    **/
+    public boolean isProjectOver(String projectId){
+        String str = projectMapper.selectByPrimaryKey(projectId).getStatus();
+        if(str.equals(ProjectStatusEnum.CLOSE.getStatus())||str.equals(ProjectStatusEnum.FILE.getStatus())) return false;
+        return true;
+    }
+
 
 }
