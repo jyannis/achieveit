@@ -20,6 +20,14 @@ spring:
 logging:
   config: classpath:logback.xml
 
+#配置邮件发送方
+mail:
+  user: 123400197
+  password: gutlqasmyzdubjdd
+  internetAddress: 123400197@qq.com
+
+
 dev:
   enable: true
+
 

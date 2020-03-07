@@ -1,0 +1,79 @@
+package com.ecnu2020.achieveit.util;
+
+import com.sun.mail.util.MailSSLSocketFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.mail.Message;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import java.util.Properties;
+
+/**
+ * JavaMail发送邮件:前提是QQ邮箱里帐号设置要开启POP3/SMTP协议
+ * @author yan on 2020-03-07
+ */
+@Component
+public class SendMail {
+
+    @Value("${mail.user}")
+    private String user;
+
+    @Value("${mail.password}")
+    private String password;
+
+    @Value("${mail.internetAddress}")
+    private String internetAddress;
+
+
+    /**
+     *
+     * @param targetMail 目标邮箱
+     * @param subject 邮件主题
+     * @param mailMessage 邮件内容
+     * @throws Exception
+     */
+    public void sendMail(String targetMail,String subject, String mailMessage) throws Exception {
+
+        Properties prop = new Properties();
+        prop.setProperty("mail.debug", "true");
+        prop.setProperty("mail.host", "smtp.qq.com");
+        prop.setProperty("mail.smtp.auth", "true");
+        prop.setProperty("mail.transport.protocol", "smtp");
+
+        MailSSLSocketFactory sf = new MailSSLSocketFactory();
+        sf.setTrustAllHosts(true);
+        prop.put("mail.smtp.ssl.enable", "true");
+        prop.put("mail.smtp.ssl.socketFactory", sf);
+
+        Session session = Session.getInstance(prop);
+        Transport ts = session.getTransport();
+        ts.connect("smtp.qq.com",user, password);
+        Message message = createSimpleMail(session,targetMail,subject,mailMessage);
+        ts.sendMessage(message, message.getAllRecipients());
+        ts.close();
+    }
+
+    /**
+     * 创建一封只包含文本的邮件
+     */
+    private MimeMessage createSimpleMail(Session session,String targetMail,String subject,String mailMessage)
+            throws Exception {
+// 创建邮件对象
+        MimeMessage message = new MimeMessage(session);
+// 指明邮件的发件人
+        message.setFrom(new InternetAddress(internetAddress));
+// 指明邮件的收件人，现在发件人和收件人是一样的，那就是自己给自己发
+        message.setRecipient(Message.RecipientType.TO, new InternetAddress(targetMail));
+// 邮件的标题
+        message.setSubject(subject);
+// 邮件的文本内容
+        message.setContent(mailMessage, "text/html;charset=UTF-8");
+// 返回创建好的邮件对象
+        return message;
+    }
+
+
+}
