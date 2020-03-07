@@ -1,11 +1,6 @@
 package com.ecnu2020.achieveit.controller;
 
-import cn.hutool.crypto.SecureUtil;
-import com.ecnu2020.achieveit.dto.UserDTO;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.*;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.springframework.validation.annotation.Validated;
@@ -22,7 +17,7 @@ import javax.validation.constraints.Size;
 public class LoginController {
 
     @PostMapping("/login")
-    @ApiOperation("登录")
+    @ApiOperation(value = "登录",response = String.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "员工id", required = true, paramType = "query", dataType = "String"),
             @ApiImplicitParam(name = "password", value = "密码(长度6-20)", required = true, paramType = "query", dataType = "String")

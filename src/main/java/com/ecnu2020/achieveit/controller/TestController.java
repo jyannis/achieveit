@@ -4,11 +4,14 @@ import com.ecnu2020.achieveit.annotation.Auth;
 import com.ecnu2020.achieveit.common.Result;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.enums.RoleEnum;
+import com.ecnu2020.achieveit.util.SendMail;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.shiro.SecurityUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -34,6 +37,17 @@ public class TestController {
     public Object test2(){
         UserDTO principal = (UserDTO) SecurityUtils.getSubject().getPrincipal();
         return 123;
+    }
+
+
+    @Autowired
+    SendMail sendMail;
+
+    @GetMapping("/mail/test/{mail}")
+    @ApiOperation("邮件测试")
+    public Object mailTest(@PathVariable("mail")String mail) throws Exception {
+        sendMail.sendMail(mail,"邮件主题","邮件内容");
+        return "success";
     }
 
 }
