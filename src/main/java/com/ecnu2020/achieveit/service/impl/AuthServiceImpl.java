@@ -7,6 +7,7 @@ import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.Staff;
 import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
 import com.ecnu2020.achieveit.entity.request_response.auth.DeleteMemberReq;
+import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
 import com.ecnu2020.achieveit.enums.ProjectStatusEnum;
 import com.ecnu2020.achieveit.enums.RoleEnum;
@@ -14,6 +15,9 @@ import com.ecnu2020.achieveit.mapper.AuthMapper;
 import com.ecnu2020.achieveit.mapper.ProjectMapper;
 import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.service.AuthService;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -87,22 +91,14 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public Page<Auth> getProjectMember(String projectId,int pageNum, int count){
+    public PageInfo<Auth> getProjectMember(String projectId, PageParam pageParam){
 
         Example example = new Example(Auth.class);
         example.createCriteria().andEqualTo("projectId",projectId);
-        RowBounds rowBounds = new RowBounds((pageNum - 1) * count, count);
-        List<Auth> listAuth = authMapper.selectByExampleAndRowBounds(example, rowBounds);
-        Page<Auth> page = new Page<>();
-        int resCount = authMapper.selectCountByExample(example);
-        if(resCount == 0) throw new RRException(ExceptionTypeEnum.PROJECTID_INVALID);
-        page.setPageNum(pageNum);
-        page.setTotal((long)resCount);
-        int totalPages = resCount%count == 0? resCount/count:resCount/count+1;
-        page.setPages(totalPages);
-        page.setItems(listAuth);
-        page.setPageSize(count);
-        return page;
+
+        PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
+        List<Auth> listAuth = authMapper.selectByExample(example);
+        return new PageInfo<>(listAuth);
     }
 
     /**

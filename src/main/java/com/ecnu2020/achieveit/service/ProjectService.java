@@ -1,6 +1,8 @@
 package com.ecnu2020.achieveit.service;
 
 import com.ecnu2020.achieveit.entity.Project;
+import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
+import com.ecnu2020.achieveit.entity.request_response.condition.ProjectCondition;
 import com.github.pagehelper.PageInfo;
 
 public interface ProjectService {
@@ -15,7 +17,10 @@ public interface ProjectService {
 
     Boolean file(String projectId);
 
-    PageInfo<Object> list(String staffId, String beginTime, String endTime, String keyWord, Integer pageNum, Integer count);
+    PageInfo<Project> list(ProjectCondition projectCondition,
+                          PageParam pageParam);
 
     Project get(String projectId);
+
+    Boolean update(Project project);
 }
