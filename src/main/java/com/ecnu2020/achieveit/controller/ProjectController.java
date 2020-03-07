@@ -1,7 +1,11 @@
 package com.ecnu2020.achieveit.controller;
 
+import com.google.gson.internal.$Gson$Preconditions;
+
 import com.ecnu2020.achieveit.annotation.Auth;
 import com.ecnu2020.achieveit.entity.Project;
+import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
+import com.ecnu2020.achieveit.entity.request_response.condition.ProjectCondition;
 import com.ecnu2020.achieveit.enums.RoleEnum;
 import com.ecnu2020.achieveit.service.ProjectService;
 import com.github.pagehelper.PageInfo;
@@ -26,21 +30,10 @@ public class ProjectController {
     @GetMapping("/list")
     @ApiOperation(value = "项目列表",response = PageInfo.class)
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "staffId", value = "员工id", required = true),
-        @ApiImplicitParam(name = "beginTime", value = "开始时间", required = false),
-        @ApiImplicitParam(name = "endTime", value = "结束时间", required = false),
-        @ApiImplicitParam(name = "keyWord", value = "关键字", required = false),
-        @ApiImplicitParam(name = "pageNum", value = "页数 (不小于0)", paramType = "query",defaultValue = "1",dataType = "Integer"),
-        @ApiImplicitParam(name = "count", value = "每页显示数量 (不小于0)", paramType = "query",defaultValue = "10",dataType = "Integer"),
-
     })
-    public PageInfo<Object> list(String staffId,
-                                 @RequestParam(defaultValue = "1970-01-01 00:00:00") String beginTime,
-                                 @RequestParam(defaultValue = "2100-12-31 00:00:00") String endTime,
-                                 @RequestParam(required = false)String keyWord,
-                                 @RequestParam(defaultValue = "1") Integer pageNum,
-                                 @RequestParam(defaultValue = "10") Integer count ){
-        return projectService.list(staffId,beginTime,endTime,keyWord,pageNum,count);
+    public Object list(ProjectCondition projectCondition,
+                       PageParam pageParam){
+        return projectService.list(projectCondition,pageParam);
     }
 
     @GetMapping("/info")
@@ -64,9 +57,19 @@ public class ProjectController {
         return projectService.build(project,superiorId);
     }
 
+    @Auth(role = RoleEnum.PROJECT_MANAGER)
+    @PutMapping("/update")
+    @ApiOperation(value = "更新项目",response = Boolean.class)
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "project", value = "项目信息", required = true),
+    })
+    public Object update(@RequestBody @Validated Project project){
+        return projectService.update(project);
+    }
+
     @Auth(role = RoleEnum.SUPERIOR)
     @PutMapping("/review")
-    @ApiOperation(value = "审核项目",response = Boolean.class)
+    @ApiOperation(value = "审核归档申请",response = Boolean.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
             @ApiImplicitParam(name = "status", value = "是否批准（1=批准，-1=拒绝", required = true),
@@ -87,7 +90,7 @@ public class ProjectController {
 
     @Auth(role = RoleEnum.PROJECT_MANAGER)
     @PutMapping("/close")
-    @ApiOperation(value = "完结项目",response = Boolean.class)
+    @ApiOperation(value = "完结项目，相当于8.12申请项目归档",response = Boolean.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
     })
@@ -104,7 +107,6 @@ public class ProjectController {
     public Object file(String projectId){
         return projectService.file(projectId);
     }
-
 
 
 }

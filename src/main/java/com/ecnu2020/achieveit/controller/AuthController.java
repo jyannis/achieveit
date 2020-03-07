@@ -4,6 +4,7 @@ import com.ecnu2020.achieveit.annotation.Auth;
 import com.ecnu2020.achieveit.common.Page;
 import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
 import com.ecnu2020.achieveit.entity.request_response.auth.DeleteMemberReq;
+import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.RoleEnum;
 import com.ecnu2020.achieveit.service.AuthService;
 import io.swagger.annotations.Api;
@@ -60,11 +61,9 @@ public class AuthController {
     @ApiOperation(value = "查看项目成员",response = Page.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
-            @ApiImplicitParam(name = "pageNum", value = "页数 (不小于0)", paramType = "query",defaultValue = "1",dataType = "Integer"),
-            @ApiImplicitParam(name = "count", value = "每页显示数量 (不小于0)", paramType = "query",defaultValue = "10",dataType = "Integer"),
     })
-    public Object getProjectMember(String projectId,Integer pageNum,Integer count){
-        return authService.getProjectMember(projectId,pageNum,count);
+    public Object getProjectMember(String projectId, PageParam pageParam){
+        return authService.getProjectMember(projectId,pageParam);
     }
 
 }
