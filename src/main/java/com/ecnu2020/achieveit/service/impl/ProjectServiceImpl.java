@@ -18,9 +18,6 @@ import com.ecnu2020.achieveit.service.ProjectService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 
-import io.swagger.annotations.ApiModelProperty;
-
-import org.apache.logging.log4j.util.Strings;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -56,11 +53,13 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public PageInfo<Project> list(ProjectCondition projectCondition , PageParam pageParam) {
         UserDTO currentUser= (UserDTO) SecurityUtils.getSubject().getPrincipal();
-        Auth authExample=Auth.builder().staffId(currentUser.getId()).build();
+        Example authExample=new Example(Auth.class);
+        authExample.createCriteria().andEqualTo("staffId",currentUser.getId()).andIn("role",
+            projectCondition.getRoleEnum());
 
-        //从Auth表中找到当前用户所在项目id列表
+        //从Auth表中找到当前用户指定角色所在项目id列表
         List<String> projectIdList=
-            authMapper.select(authExample)
+            authMapper.selectByExample(authExample)
                 .stream()
                 .map(auth -> auth.getProjectId())
                 .collect(Collectors.toList());
@@ -71,10 +70,11 @@ public class ProjectServiceImpl implements ProjectService {
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
 
         List<Project> content=projectMapper.selectByExample(example)
-            .stream()
-            //关键字
-            .filter(project -> project.toString().contains(projectCondition.getKeyWord()))
-            .collect(Collectors.toList());
+//            .stream()
+//            //关键字
+//            .filter(project -> project.toString().contains(projectCondition.getKeyWord()))
+//            .collect(Collectors.toList())
+            ;
 
         return new PageInfo<>(content);
     }
@@ -121,14 +121,14 @@ public class ProjectServiceImpl implements ProjectService {
         Boolean res;
         //通过
         if(status.equals(1)){
-            if(res=updateStatus(projectId,ProjectStatusEnum.REVIEW.getStatus())){
+            if(res=updateStatus(old,ProjectStatusEnum.REVIEW.getStatus())){
                 //发送邮件给配置管理员, EPG Leader, QA Manager
 
             }
         }
         //拒绝
         else if(status.equals(-1)){
-            if(res=updateStatus(projectId,ProjectStatusEnum.REJECTED.getStatus())){
+            if(res=updateStatus(old,ProjectStatusEnum.REJECTED.getStatus())){
                 //发送邮件给项目经理
 
             }
@@ -138,13 +138,17 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Boolean deliver(String projectId) {
-        return updateStatus(projectId,ProjectStatusEnum.DELIVER.getStatus());
+        Project old=projectMapper.selectByPrimaryKey(projectId);
+        Optional.ofNullable(old).orElseThrow(()->new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
+        return updateStatus(old,ProjectStatusEnum.DELIVER.getStatus());
     }
 
     @Override
     public Boolean close(String projectId) {
+        Project old=projectMapper.selectByPrimaryKey(projectId);
+        Optional.ofNullable(old).orElseThrow(()->new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
         Boolean res;
-        if(res=updateStatus(projectId,ProjectStatusEnum.CLOSE.getStatus())){
+        if(res=updateStatus(old,ProjectStatusEnum.CLOSE.getStatus())){
             //发送邮件给组织配置管理员
 
         }
@@ -152,13 +156,30 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public Boolean file(String projectId) {
-        return updateStatus(projectId,ProjectStatusEnum.FILE.getStatus());
+    public Boolean file(String projectId, Integer status) {
+        Project old=projectMapper.selectByPrimaryKey(projectId);
+        Optional.ofNullable(old)
+            //已结束才能归档
+            .filter(p -> ProjectStatusEnum.CLOSE.getStatus().equals(p.getStatus()))
+            .orElseThrow(()->new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
+        Boolean res=true;
+        //通过
+        if(status.equals(1)){
+            if(res=updateStatus(old,ProjectStatusEnum.FILE.getStatus())){
+                //发送邮件给项目经理，通知归档申请已通过
+
+            }
+        }
+        //拒绝
+        else if(status.equals(-1)){
+                //发送邮件给项目经理 提示归档申请未通过，需要修改后重新提交申请
+
+
+        } else throw new RRException(ExceptionTypeEnum.INVALID_STATUS);
+        return res;
     }
 
-    private Boolean updateStatus(String projectId,String status){
-        Project old=projectMapper.selectByPrimaryKey(projectId);
-        Optional.ofNullable(old).orElseThrow(()->new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
+    private Boolean updateStatus(Project old,String status){
         old.setStatus(status);
         return projectMapper.updateByPrimaryKey(old)>0;
     }

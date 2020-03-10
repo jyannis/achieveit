@@ -1,6 +1,7 @@
 package com.ecnu2020.achieveit.entity.request_response.condition;
 
 import com.ecnu2020.achieveit.enums.ProjectStatusEnum;
+import com.ecnu2020.achieveit.enums.RoleEnum;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -20,9 +21,11 @@ import java.util.stream.Collectors;
 @ApiModel
 @Data
 public class ProjectCondition {
-    @ApiModelProperty("关键字，非必传")
+    @ApiModelProperty("关键字，非必传，暂不支持")
     private String keyWord="";
     @ApiModelProperty("项目状态，默认全部状态")
     private List<String> status=
          Arrays.stream(ProjectStatusEnum.values()).map(e -> e.getStatus()).collect(Collectors.toList());
+    @ApiModelProperty("角色,默认全部角色种类")
+    private List<String> roleEnum=Arrays.stream(RoleEnum.values()).map(r->r.getRoleName()).collect(Collectors.toList());
 }

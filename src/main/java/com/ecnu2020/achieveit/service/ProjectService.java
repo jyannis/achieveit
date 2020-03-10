@@ -15,7 +15,7 @@ public interface ProjectService {
 
     Boolean close(String projectId);
 
-    Boolean file(String projectId);
+    Boolean file(String projectId, Integer status);
 
     PageInfo<Project> list(ProjectCondition projectCondition,
                           PageParam pageParam);
