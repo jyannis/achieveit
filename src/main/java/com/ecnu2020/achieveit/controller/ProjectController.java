@@ -67,7 +67,7 @@ public class ProjectController {
 
     @Auth(role = RoleEnum.SUPERIOR)
     @PutMapping("/review")
-    @ApiOperation(value = "审核归档申请",response = Boolean.class)
+    @ApiOperation(value = "8.4审批立项",response = Boolean.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
             @ApiImplicitParam(name = "status", value = "是否批准（1=批准，-1=拒绝", required = true),
@@ -98,12 +98,13 @@ public class ProjectController {
 
     @Auth(role = RoleEnum.CONFIGURATION_MANAGER)
     @PutMapping("/file")
-    @ApiOperation(value = "归档项目",response = Boolean.class)
+    @ApiOperation(value = "8.13审核归档申请",response = Boolean.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
+            @ApiImplicitParam(name = "status", value = "是否批准（1=批准，-1=拒绝", required = true),
     })
-    public Object file(String projectId){
-        return projectService.file(projectId);
+    public Object file(String projectId,Integer status){
+        return projectService.file(projectId,status);
     }
 
 
