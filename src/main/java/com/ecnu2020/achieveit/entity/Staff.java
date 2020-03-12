@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
 
 /**
  * @author yan on 2020-02-27
@@ -17,6 +18,7 @@ import javax.persistence.Id;
 public class Staff{
 	@Id
 	private String id;
+	@NotNull(message = "员工名不能为空")
 	private String name;
 	private String password;
 	private String email;

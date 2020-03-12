@@ -1,5 +1,6 @@
 package com.ecnu2020.achieveit.entity.request_response.auth;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +19,9 @@ import javax.validation.constraints.NotNull;
 @Builder
 public class DeleteMemberReq {
     @NotNull
+    @ApiModelProperty("员工id,不为空")
     private String staffId;
     @NotNull
+    @ApiModelProperty("角色，不为空")
     private String role;
 }

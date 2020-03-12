@@ -33,7 +33,7 @@ public interface AuthService {
       * @Param [projectId, deleteMemberReq]
       * @return void
     **/
-    void deleteMemberAuth(String projectId, DeleteMemberReq deleteMemberReq);
+    Boolean deleteMemberAuth(String projectId, DeleteMemberReq deleteMemberReq);
 
     /**
       * @Author Lucas
@@ -42,7 +42,7 @@ public interface AuthService {
       * @Param [projectId, addMemberReq]
       * @return Auth
     **/
-    Auth modMemberAuth(String projectId,AddMemberReq addMemberReq);
+    Boolean modMemberAuth(String projectId,AddMemberReq addMemberReq);
 
     /**
       * @Author Lucas
@@ -51,5 +51,5 @@ public interface AuthService {
       * @Param [projectId, pageParam]
       * @return PageInfo<Auth>
     **/
-    PageInfo<Auth> getProjectMember(String projectId, PageParam pageParam);
+    PageInfo<Auth> getProjectMember(String keyword, PageParam pageParam);
 }

@@ -13,13 +13,20 @@ public enum ExceptionTypeEnum {
 
     PERMISSION_DENIED(1004,"权限不足"),
     LOGIN_FAILED(1005,"登录校验失败"),
-    ADD_FAIL(1006,"用户已存在"),
+    ADD_FAIL(1006,"员工已存在"),
 
-    INVALID_STAFF(1007,"用户不存在"),
+    INVALID_STAFF(1007,"员工不存在"),
     PROJECTID_REPEATED(1008,"项目ID重复"),
     INVALID_STATUS(1009,"无效的状态"),
     SERVER_ERROR(-1,"服务器内部异常"),
-    PROJECT_STATUS_ERROR(1010,"根据当前项目状态，信息不能修改")
+    PROJECT_STATUS_ERROR(1010,"根据当前项目状态，信息不能修改"),
+    DELETE_DEVICE_FAIL(1011,"删除失败，设备不存在"),
+    ADD_DEVICE_FAIL(1012,"添加失败，设备已存在"),
+    ADD_TASKTIME_FAIL(1013,"填写工时错误，不能超过三天"),
+    ADD_BUD_FAIL(1014,"添加失败，缺陷已存在"),
+    UPDATE_BUG_FAIL(1015,"缺陷已解决，信息不能修改"),
+    ADD_RISK_FAIL(1016,"添加失败，风险已存在"),
+    ADD_TASKTIME_REFUSE(1017,"工时已审核通过，不能修改")
     ;
 
 
