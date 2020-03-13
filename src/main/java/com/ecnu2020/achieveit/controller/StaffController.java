@@ -15,7 +15,6 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.List;
 
 /**
  * @Description
@@ -46,8 +45,11 @@ public class StaffController {
 
     @Auth(role = RoleEnum.PROJECT_MANAGER)
     @GetMapping("/importStaff")
-    @ApiOperation(value = "导入员工信息",response = List.class)
-    public Object ProjectStaff(PageParam pageParam){
+    @ApiOperation(value = "导入员工信息",response = PageInfo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", required = true)
+    })
+    public Object ProjectStaff(String projectId,PageParam pageParam){
         return staffService.importStaff(pageParam);
     }
 

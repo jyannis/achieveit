@@ -5,7 +5,6 @@ import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.Staff;
 import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
-import com.ecnu2020.achieveit.entity.request_response.auth.DeleteMemberReq;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
 import com.ecnu2020.achieveit.enums.ProjectStatusEnum;
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -71,10 +69,12 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public Boolean deleteMemberAuth(String projectId, DeleteMemberReq deleteMemberReq) {
+    public Boolean deleteMemberAuth(String projectId, String staffId) {
         if(!isProjectOver(projectId)) throw new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR);
-        Auth auth = getAuth(projectId,deleteMemberReq.getStaffId(),deleteMemberReq.getRole());
+        Auth authExample = Auth.builder().staffId(staffId).projectId(projectId).build();
+        Auth auth = authMapper.selectOne(authExample);
         Optional.ofNullable(auth).orElseThrow(()->new RRException(ExceptionTypeEnum.INVALID_STAFF));
+        if(auth.getRole().equals(RoleEnum.PROJECT_MANAGER.getRoleName())) throw new RRException(ExceptionTypeEnum.DELETE_AUTH_FAIL);
         return authMapper.delete(auth) > 0;
     }
 
@@ -91,16 +91,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public PageInfo<Auth> getProjectMember(String keyword, PageParam pageParam){
-        UserDTO currentUser  = (UserDTO) SecurityUtils.getSubject().getPrincipal();
-        Auth authExample=Auth.builder().staffId(currentUser.getId()).build();
-        List<String> projectId = authMapper.select(authExample)
-                .stream()
-                .filter(auth -> auth.getRole().equals(RoleEnum.PROJECT_MANAGER.getRoleName()))
-                .map(auth -> auth.getProjectId())
-                .collect(Collectors.toList());
+    public PageInfo<Auth> getProjectMember(String projectId,String keyword, PageParam pageParam){
         Example example = new Example(Auth.class);
-        example.createCriteria().andIn("projectId",projectId);
+        example.createCriteria().andEqualTo("projectId",projectId);
         List<Integer> id = authMapper.selectByExample(example)
                 .stream()
                 .filter(auth -> auth.toString().contains(keyword))

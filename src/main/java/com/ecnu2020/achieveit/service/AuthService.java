@@ -1,15 +1,11 @@
 package com.ecnu2020.achieveit.service;
 
-import com.ecnu2020.achieveit.common.Page;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
-import com.ecnu2020.achieveit.entity.request_response.auth.DeleteMemberReq;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.RoleEnum;
 import com.github.pagehelper.PageInfo;
-
-import java.util.List;
 
 public interface AuthService {
 
@@ -33,7 +29,7 @@ public interface AuthService {
       * @Param [projectId, deleteMemberReq]
       * @return void
     **/
-    Boolean deleteMemberAuth(String projectId, DeleteMemberReq deleteMemberReq);
+    Boolean deleteMemberAuth(String projectId, String staffId);
 
     /**
       * @Author Lucas
@@ -51,5 +47,5 @@ public interface AuthService {
       * @Param [projectId, pageParam]
       * @return PageInfo<Auth>
     **/
-    PageInfo<Auth> getProjectMember(String keyword, PageParam pageParam);
+    PageInfo<Auth> getProjectMember(String projectId, String keyword, PageParam pageParam);
 }
