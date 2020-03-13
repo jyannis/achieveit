@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import javax.persistence.Id;
+import javax.validation.constraints.NotNull;
 
 import java.sql.Timestamp;
 
@@ -15,13 +17,18 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @Builder
 public class TaskTime {
+	@Id
 	private Integer id;
+	@NotNull
 	private Integer featureId;
 	private String description;
 	private Integer activityId;
+	@NotNull
 	private Timestamp beginTime;
+	@NotNull
 	private Timestamp endTime;
+	@NotNull
 	private Timestamp updateTime;
-	private Short status;
+	private Short status = 0;
 
 }

@@ -1,12 +1,12 @@
 package com.ecnu2020.achieveit.controller;
 
 import com.ecnu2020.achieveit.annotation.Auth;
-import com.ecnu2020.achieveit.common.Page;
 import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
 import com.ecnu2020.achieveit.entity.request_response.auth.DeleteMemberReq;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.RoleEnum;
 import com.ecnu2020.achieveit.service.AuthService;
+import com.github.pagehelper.PageInfo;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -31,7 +31,7 @@ public class AuthController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object addMemberAuth(String projectId,@RequestBody @Validated AddMemberReq addMemberReq){
+    public Object addMemberAuth(String projectId, AddMemberReq addMemberReq){
         return authService.addMemberAuth(projectId,addMemberReq);
     }
 
@@ -41,29 +41,26 @@ public class AuthController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object deleteMemberAuth(String projectId,@RequestBody @Validated DeleteMemberReq deleteMemberReq){
-            authService.deleteMemberAuth(projectId,deleteMemberReq);
-            return "success";
+    public Object deleteMemberAuth(String projectId, DeleteMemberReq deleteMemberReq){
+            return authService.deleteMemberAuth(projectId,deleteMemberReq);
     }
 
     @Auth(role = RoleEnum.PROJECT_MANAGER)
     @PutMapping("/update")
-    @ApiOperation(value = "修改项目成员权限",response = Auth.class)
+    @ApiOperation(value = "修改项目成员权限",response = Boolean.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object modMemberAuth(String projectId,@RequestBody @Validated AddMemberReq addMemberReq){
+    public Boolean modMemberAuth(String projectId, AddMemberReq addMemberReq){
         return authService.modMemberAuth(projectId,addMemberReq);
     }
 
     @Auth(role = RoleEnum.PROJECT_MANAGER)
     @GetMapping("/getMembers")
-    @ApiOperation(value = "查看项目成员",response = Page.class)
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
-    })
-    public Object getProjectMember(String projectId, PageParam pageParam){
-        return authService.getProjectMember(projectId,pageParam);
+    @ApiOperation(value = "查看项目成员权限",response = PageInfo.class)
+    public Object getProjectMember(String keyword, PageParam pageParam){
+        if(keyword == null) keyword = "";
+        return authService.getProjectMember(keyword,pageParam);
     }
 
 }

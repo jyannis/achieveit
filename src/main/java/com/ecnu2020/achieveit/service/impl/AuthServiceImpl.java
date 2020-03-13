@@ -1,6 +1,5 @@
 package com.ecnu2020.achieveit.service.impl;
 
-import com.ecnu2020.achieveit.common.Page;
 import com.ecnu2020.achieveit.common.RRException;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
@@ -15,17 +14,19 @@ import com.ecnu2020.achieveit.mapper.AuthMapper;
 import com.ecnu2020.achieveit.mapper.ProjectMapper;
 import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.service.AuthService;
+
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-
-import org.apache.ibatis.session.RowBounds;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -70,40 +71,52 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public void deleteMemberAuth(String projectId, DeleteMemberReq deleteMemberReq) {
+    public Boolean deleteMemberAuth(String projectId, DeleteMemberReq deleteMemberReq) {
         if(!isProjectOver(projectId)) throw new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR);
         Auth auth = getAuth(projectId,deleteMemberReq.getStaffId(),deleteMemberReq.getRole());
         Optional.ofNullable(auth).orElseThrow(()->new RRException(ExceptionTypeEnum.INVALID_STAFF));
-        authMapper.delete(auth);
+        return authMapper.delete(auth) > 0;
     }
 
     @Override
     @Transactional
-    public Auth modMemberAuth(String projectId,AddMemberReq addMemberReq){
+    public Boolean modMemberAuth(String projectId,AddMemberReq addMemberReq){
         if(!isProjectOver(projectId)) throw new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR);
         Auth auth = getAuth(projectId,addMemberReq.getStaffId(),addMemberReq.getRole());
         Optional.ofNullable(auth).orElseThrow(()->new RRException(ExceptionTypeEnum.INVALID_STAFF));
         Auth authExample = setAuth(projectId,addMemberReq);
         authExample.setId(auth.getId());
-        authMapper.updateByPrimaryKey(authExample);
-        return authMapper.selectOne(authExample);
+        return authMapper.updateByPrimaryKey(authExample) > 0;
     }
 
     @Override
     @Transactional
-    public PageInfo<Auth> getProjectMember(String projectId, PageParam pageParam){
-
+    public PageInfo<Auth> getProjectMember(String keyword, PageParam pageParam){
+        UserDTO currentUser  = (UserDTO) SecurityUtils.getSubject().getPrincipal();
+        Auth authExample=Auth.builder().staffId(currentUser.getId()).build();
+        List<String> projectId = authMapper.select(authExample)
+                .stream()
+                .filter(auth -> auth.getRole().equals(RoleEnum.PROJECT_MANAGER.getRoleName()))
+                .map(auth -> auth.getProjectId())
+                .collect(Collectors.toList());
         Example example = new Example(Auth.class);
-        example.createCriteria().andEqualTo("projectId",projectId);
-
+        example.createCriteria().andIn("projectId",projectId);
+        List<Integer> id = authMapper.selectByExample(example)
+                .stream()
+                .filter(auth -> auth.toString().contains(keyword))
+                .map(auth -> auth.getId())
+                .collect(Collectors.toList());
+        if(id.isEmpty()) return new PageInfo<>(null);
+        Example example1 = new Example(Auth.class);
+        example1.createCriteria().andIn("id",id);
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
-        List<Auth> listAuth = authMapper.selectByExample(example);
-        return new PageInfo<>(listAuth);
+        List<Auth> list = authMapper.selectByExample(example1);
+        return new PageInfo<>(list);
     }
 
     /**
-      * @Author Zc
-      * @Description 得到人员权限
+      * @Author Zc`
+      * @Description 返回人员权限
       * @Date 18:05 2020/3/4
       * @Param [projectId, staffId, roleName]
       * @return Auth

@@ -4,7 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import javax.persistence.Id;
 
+import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
 
 /**
@@ -15,11 +17,15 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @Builder
 public class Device{
+
+	@Id
 	private Integer id;
+	@NotNull(message = "设备名不为空")
 	private String name;
 	private String admin;
 	private String borrower;
+	@NotNull(message = "不能为空")
 	private Timestamp endTime;
-	private String status;
+	private String status = "已归还";
 
 }
