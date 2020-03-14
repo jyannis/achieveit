@@ -2,6 +2,11 @@ package com.ecnu2020.achieveit.util;
 
 import com.ecnu2020.achieveit.entity.Feature;
 import lombok.extern.slf4j.Slf4j;
+
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -38,15 +43,39 @@ public class MakeExcel<T> {
         Field[]fields = tList.get(0).getClass().getDeclaredFields();
 
 
+        //2.2标题
+        CellRangeAddress callRangeHeader = new CellRangeAddress(0, 0, 0, 3);//起始行,结束行,起始列,结束列
+        //创建头标题行;并且设置头标题
+        XSSFRow rower = sheet.createRow(0);
+        XSSFCell celler = rower.createCell(0);
+        //加载单元格样式
+        //xxx功能列表
+        XSSFCellStyle erStyle = createCellStyle(workbook, (short) 13, true, true);
+        celler.setCellStyle(erStyle);
+        celler.setCellValue(sheetName);
+
+        sheet.addMergedRegion(callRangeHeader);
+
+        //2.3列名
+        XSSFRow propertyRow=sheet.createRow(1);
+        propertyRow.createCell(0).setCellValue("序号");
+        propertyRow.createCell(1).setCellValue("功能");
+        propertyRow.createCell(2).setCellValue("子功能");
+        propertyRow.createCell(3).setCellValue("描述");
+        sheet.setColumnWidth(3,30 * 256);
+
+
         //第三步，写入实体数据，实际应用中这些数据从数据库得到,对象封装数据，集合包对象。对象的属性值对应表的每行的值
         for (int i = 0; i < tList.size(); i++) {
-            XSSFRow row1 = sheet.createRow(i);
+            XSSFRow row1 = sheet.createRow(i+2);
             T t = tList.get(i);
 
-            //创建单元格设值 j从1开始（去除id）
+            //创建单元格设值 j从1开始（去除id）项目id和逻辑删除位不展示
             for(int j = 0;j<fields.length;j++){
                 fields[j].setAccessible(true);
-                if(fields[j].get(t)!=null){
+                if(fields[j].get(t)!=null
+                    &&!fields[j].getName().equals("projectId")
+                    &&!fields[j].getName().equals("deleted")){
                     row1.createCell(j).setCellValue(fields[j].get(t)+"");
                 }
             }
@@ -64,6 +93,36 @@ public class MakeExcel<T> {
 
     return path + "/" + sheetName + ".xlsx";
     }
+
+    private  XSSFCellStyle createCellStyle(XSSFWorkbook workbook, short fontsize, boolean midFlag,
+                                           boolean boldFlag) {
+        // TODO Auto-generated method stub
+        XSSFCellStyle style = workbook.createCellStyle();
+
+        //边框
+        style.setBorderBottom(XSSFCellStyle.BORDER_THIN);
+        style.setBorderTop(XSSFCellStyle.BORDER_THIN);
+        style.setBorderLeft(XSSFCellStyle.BORDER_THIN);
+        style.setBorderRight(XSSFCellStyle.BORDER_THIN);
+
+        //是否水平居中
+        if (midFlag) {
+            style.setAlignment(XSSFCellStyle.ALIGN_CENTER);//水平居中
+        }
+
+        style.setVerticalAlignment(XSSFCellStyle.VERTICAL_CENTER);//垂直居中
+        //创建字体
+        XSSFFont font = workbook.createFont();
+        //是否加粗字体
+        if (boldFlag) {
+            font.setBoldweight(XSSFFont.BOLDWEIGHT_BOLD);
+        }
+        font.setFontHeightInPoints(fontsize);
+        //加载字体
+        style.setFont(font);
+        return style;
+    }
+
 
 
     public static void main(String[] args) throws Exception {

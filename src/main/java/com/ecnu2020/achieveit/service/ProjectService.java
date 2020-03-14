@@ -23,4 +23,6 @@ public interface ProjectService {
     Project get(String projectId);
 
     Boolean update(Project project);
+
+    Boolean delete(String projectId);
 }

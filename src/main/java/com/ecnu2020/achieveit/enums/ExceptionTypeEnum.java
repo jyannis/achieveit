@@ -27,7 +27,8 @@ public enum ExceptionTypeEnum {
     UPDATE_BUG_FAIL(1015,"缺陷已解决，信息不能修改"),
     ADD_RISK_FAIL(1016,"添加失败，风险已存在"),
     ADD_TASKTIME_REFUSE(1017,"工时已审核通过，不能修改"),
-    DELETE_AUTH_FAIL(1018,"不能删除自己的权限")
+    DELETE_AUTH_FAIL(1018,"不能删除自己的权限"),
+    INVALID_FEATURE(1019,"功能不存在")
     ;
 
 

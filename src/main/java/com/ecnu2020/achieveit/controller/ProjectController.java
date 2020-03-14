@@ -107,5 +107,15 @@ public class ProjectController {
         return projectService.file(projectId,status);
     }
 
+    @Auth(role = RoleEnum.PROJECT_MANAGER)
+    @DeleteMapping("/update")
+    @ApiOperation(value = "更新项目",response = Boolean.class)
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
+    })
+    public Object delete(String projectId){
+        return projectService.delete(projectId);
+    }
+
 
 }
