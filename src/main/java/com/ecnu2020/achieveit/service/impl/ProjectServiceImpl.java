@@ -4,6 +4,7 @@ import com.ecnu2020.achieveit.common.RRException;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.Project;
+import com.ecnu2020.achieveit.entity.Staff;
 import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.entity.request_response.condition.ProjectCondition;
@@ -15,6 +16,7 @@ import com.ecnu2020.achieveit.mapper.ProjectMapper;
 import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.service.AuthService;
 import com.ecnu2020.achieveit.service.ProjectService;
+import com.ecnu2020.achieveit.util.SendMail;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 
@@ -49,6 +51,9 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Autowired
     private StaffMapper staffMapper;
+
+    @Autowired
+    private SendMail sendMail;
 
     @Override
     public PageInfo<Project> list(ProjectCondition projectCondition , PageParam pageParam) {
@@ -89,8 +94,8 @@ public class ProjectServiceImpl implements ProjectService {
     public Project build(Project project, String superiorId) {
         Project old=projectMapper.selectByPrimaryKey(project.getId());
         if(old!=null)throw new RRException(ExceptionTypeEnum.PROJECTID_REPEATED);
-        Optional.ofNullable(staffMapper.selectByPrimaryKey(superiorId))
-            .filter(staff -> staff.getManager().equals((short)1))
+        Staff superior=staffMapper.selectByPrimaryKey(superiorId);
+        Optional.ofNullable(superior)
             .orElseThrow(()->new RRException(ExceptionTypeEnum.INVALID_STAFF));
         AddMemberReq addMemberReq = AddMemberReq.builder()
                                     .staffId(superiorId).role(RoleEnum.SUPERIOR.getRoleName())
@@ -100,7 +105,6 @@ public class ProjectServiceImpl implements ProjectService {
         projectMapper.insertSelective(project);
 
         //发送通知给项目上级
-
 
         return projectMapper.selectOne(project);
     }
@@ -157,29 +161,39 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Boolean file(String projectId, Integer status) {
-        Project old=projectMapper.selectByPrimaryKey(projectId);
+        Project old = projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old)
             //已结束才能归档
             .filter(p -> ProjectStatusEnum.CLOSE.getStatus().equals(p.getStatus()))
-            .orElseThrow(()->new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
-        Boolean res=true;
+            .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
+        Boolean res = true;
         //通过
-        if(status.equals(1)){
-            if(res=updateStatus(old,ProjectStatusEnum.FILE.getStatus())){
+        if (status.equals(1)) {
+            if (res = updateStatus(old, ProjectStatusEnum.FILE.getStatus())) {
                 //发送邮件给项目经理，通知归档申请已通过
 
             }
         }
         //拒绝
-        else if(status.equals(-1)){
-                //发送邮件给项目经理 提示归档申请未通过，需要修改后重新提交申请
+        else if (status.equals(-1)) {
+            //发送邮件给项目经理 提示归档申请未通过，需要修改后重新提交申请
 
 
         } else throw new RRException(ExceptionTypeEnum.INVALID_STATUS);
         return res;
+
     }
 
-    private Boolean updateStatus(Project old,String status){
+    @Override
+    public Boolean delete(String projectId) {
+        Project old=projectMapper.selectByPrimaryKey(projectId);
+        Optional.ofNullable(old).orElseThrow(()->new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
+        old.setDeleted((short)1);
+        projectMapper.updateByPrimaryKey(old);
+        return true;
+    }
+
+    private Boolean updateStatus(Project old, String status){
         old.setStatus(status);
         return projectMapper.updateByPrimaryKey(old)>0;
     }

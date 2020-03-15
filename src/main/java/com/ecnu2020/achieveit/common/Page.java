@@ -26,14 +26,14 @@ public class Page<T> {
     //总页数
     private int pages;
     // 分页结果
-    private List<T> items;
+    private List<T> list;
 
     public Page(PageInfo<T> pageInfo) {
         this.pageNum = pageInfo.getPageNum();
         this.pageSize = pageInfo.getPageSize();
         this.total = pageInfo.getTotal();
         this.pages = pageInfo.getPages();
-        this.items = pageInfo.getList();
+        this.list = pageInfo.getList();
     }
 
 }

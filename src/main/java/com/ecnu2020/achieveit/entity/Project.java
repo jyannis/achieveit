@@ -1,6 +1,7 @@
 package com.ecnu2020.achieveit.entity;
 
 import com.ecnu2020.achieveit.enums.ProjectStatusEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,5 +34,7 @@ public class Project{
 	private String business;
 	private String feature;
 	private String status= ProjectStatusEnum.BUILD.getStatus();
+	@JsonIgnore
+	private Short deleted=0;
 
 }

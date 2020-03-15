@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @description:
+ * @description: 项目列表查询参数
  * @author: ganlirong
  * @create: 2020/03/08
  */
