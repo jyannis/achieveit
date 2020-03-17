@@ -97,7 +97,7 @@ public class ProjectController {
     }
 
     @Auth(role = RoleEnum.PROJECT_MANAGER)
-    @PutMapping("/close")
+    @PutMapping("/apply")
     @ApiOperation(value = "申请项目归档，状态从已完结变为申请归档中",response = Boolean.class)
     @ApiImplicitParams({
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
