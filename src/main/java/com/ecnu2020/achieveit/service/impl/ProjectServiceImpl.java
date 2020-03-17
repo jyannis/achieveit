@@ -151,8 +151,18 @@ public class ProjectServiceImpl implements ProjectService {
     public Boolean close(String projectId) {
         Project old=projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old).orElseThrow(()->new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
+        return updateStatus(old,ProjectStatusEnum.CLOSE.getStatus());
+    }
+
+    @Override
+    public Boolean apply(String projectId) {
+        Project old=projectMapper.selectByPrimaryKey(projectId);
+        Optional.ofNullable(old)
+            //已完结才能申请归档
+            .filter(p -> ProjectStatusEnum.CLOSE.getStatus().equals(p.getStatus()))
+            .orElseThrow(()->new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
         Boolean res;
-        if(res=updateStatus(old,ProjectStatusEnum.CLOSE.getStatus())){
+        if(res=updateStatus(old,ProjectStatusEnum.APPLY.getStatus())){
             //发送邮件给组织配置管理员
 
         }
@@ -163,8 +173,8 @@ public class ProjectServiceImpl implements ProjectService {
     public Boolean file(String projectId, Integer status) {
         Project old = projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old)
-            //已结束才能归档
-            .filter(p -> ProjectStatusEnum.CLOSE.getStatus().equals(p.getStatus()))
+            //归档申请中的才能归档
+            .filter(p -> ProjectStatusEnum.APPLY.getStatus().equals(p.getStatus()))
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
         Boolean res = true;
         //通过
@@ -176,6 +186,8 @@ public class ProjectServiceImpl implements ProjectService {
         }
         //拒绝
         else if (status.equals(-1)) {
+            //变回已完结
+            updateStatus(old, ProjectStatusEnum.CLOSE.getStatus());
             //发送邮件给项目经理 提示归档申请未通过，需要修改后重新提交申请
 
 

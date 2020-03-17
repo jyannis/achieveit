@@ -15,6 +15,7 @@ public enum ProjectStatusEnum {
     ONGOING("进行中"),
     DELIVER("已交付"),
     CLOSE("已完结"),
+    APPLY("归档申请中"),
     FILE("已归档");
 
     private String status;

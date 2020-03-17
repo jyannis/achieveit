@@ -30,4 +30,8 @@ mail:
 dev:
   enable: true
 
+file:
+  excelPath: src/main/resources/file
+  excelUrl: /Users/ganlirong/Desktop
+
 

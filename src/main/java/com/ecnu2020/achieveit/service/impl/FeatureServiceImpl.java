@@ -16,6 +16,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -33,11 +34,17 @@ import tk.mybatis.mapper.entity.Example;
 @Service
 public class FeatureServiceImpl implements FeatureService {
 
+    @Value("${file.excelUrl}")
+    private String excelUrl;
+
     @Autowired
     private FeatureMapper featureMapper;
 
     @Autowired
     private ProjectMapper projectMapper;
+
+    @Autowired
+    private MakeExcel<Feature> makeExcel;
 
     @Override
     public Page<Feature> list(String projectId, FeatureCondition featureCondition,
@@ -103,6 +110,6 @@ public class FeatureServiceImpl implements FeatureService {
         example.orderBy("feature");
         example.createCriteria().andEqualTo("projectId",projectId);
         List<Feature> featureList= featureMapper.selectByExample(example);
-        return new MakeExcel<Feature>().makeExcel(featureList,old.getName()+"功能列表","FeatureExcel");
+        return  makeExcel.makeExcel(featureList,old.getName()+"功能列表",excelUrl);
     }
 }
