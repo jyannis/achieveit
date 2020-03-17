@@ -10,6 +10,7 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -27,9 +28,15 @@ import java.util.List;
 @Slf4j
 public class MakeExcel<T> {
 
+    @Value("${file.excelPath}")
+    private String excelPath;
+
+    @Value("${file.excelUrl}")
+    private String excelUrl;
+
     public String makeExcel(List<T> tList,String sheetName, String path) throws Exception {
         //检查文件夹是否存在，不存在就创建
-        File dir = new File(path);
+        File dir = new File(excelPath);
         if (!dir.exists()) {
             dir.mkdirs();
         }
@@ -62,6 +69,7 @@ public class MakeExcel<T> {
         propertyRow.createCell(1).setCellValue("功能");
         propertyRow.createCell(2).setCellValue("子功能");
         propertyRow.createCell(3).setCellValue("描述");
+        sheet.setColumnWidth(2,25 * 256);
         sheet.setColumnWidth(3,30 * 256);
 
 
@@ -69,20 +77,22 @@ public class MakeExcel<T> {
         for (int i = 0; i < tList.size(); i++) {
             XSSFRow row1 = sheet.createRow(i+2);
             T t = tList.get(i);
-
+            row1.createCell(0).setCellValue(i+1);
+            int k=1;
             //创建单元格设值 j从1开始（去除id）项目id和逻辑删除位不展示
             for(int j = 0;j<fields.length;j++){
                 fields[j].setAccessible(true);
                 if(fields[j].get(t)!=null
+                    &&!fields[j].getName().equals("id")
                     &&!fields[j].getName().equals("projectId")
                     &&!fields[j].getName().equals("deleted")){
-                    row1.createCell(j).setCellValue(fields[j].get(t)+"");
+                    row1.createCell(k++).setCellValue(fields[j].get(t)+"");
                 }
             }
         }
         //将文件保存到指定的位置
         try {
-            FileOutputStream fos = new FileOutputStream(path + "/" + sheetName + ".xlsx");
+            FileOutputStream fos = new FileOutputStream(excelPath + "/" + sheetName + ".xlsx");
             workbook.write(fos);
             log.info("excel写入成功");
             fos.close();
@@ -91,7 +101,7 @@ public class MakeExcel<T> {
             return null;
         }
 
-    return path + "/" + sheetName + ".xlsx";
+    return excelUrl + "/" + sheetName + ".xlsx";
     }
 
     private  XSSFCellStyle createCellStyle(XSSFWorkbook workbook, short fontsize, boolean midFlag,

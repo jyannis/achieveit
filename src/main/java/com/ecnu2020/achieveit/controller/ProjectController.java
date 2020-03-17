@@ -88,12 +88,22 @@ public class ProjectController {
 
     @Auth(role = RoleEnum.PROJECT_MANAGER)
     @PutMapping("/close")
-    @ApiOperation(value = "完结项目，相当于8.12申请项目归档",response = Boolean.class)
+    @ApiOperation(value = "完结项目，状态变为已完结",response = Boolean.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
     })
     public Object close(String projectId){
         return projectService.close(projectId);
+    }
+
+    @Auth(role = RoleEnum.PROJECT_MANAGER)
+    @PutMapping("/close")
+    @ApiOperation(value = "申请项目归档，状态从已完结变为申请归档中",response = Boolean.class)
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
+    })
+    public Object apply(String projectId){
+        return projectService.apply(projectId);
     }
 
     @Auth(role = RoleEnum.CONFIGURATION_MANAGER)
@@ -108,8 +118,8 @@ public class ProjectController {
     }
 
     @Auth(role = RoleEnum.PROJECT_MANAGER)
-    @DeleteMapping("/update")
-    @ApiOperation(value = "更新项目",response = Boolean.class)
+    @DeleteMapping("/delete")
+    @ApiOperation(value = "删除项目",response = Boolean.class)
     @ApiImplicitParams({
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
     })

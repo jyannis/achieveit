@@ -86,21 +86,16 @@ public class FeatureController {
         @ApiImplicitParam(name = "featureList", value = "(子)功能数组", required = true),
     })
     public Object getExcel(String projectId) throws Exception {
-        String filePath= featureService.getExcel(projectId);
-        FileSystemResource file = new FileSystemResource(filePath);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        headers.add("Content-Disposition", String.format("attachment; filename=\"%s\"", URLEncoder.encode(file.getFilename(),"utf-8")));
-        headers.add("Access-Control-Expose-Headers", "FileName");
-        headers.add("FileName", URLEncoder.encode(file.getFilename(),"utf-8"));
-        headers.add("Pragma", "no-cache");
-        headers.add("Expires", "0");
+//        String filePath=
+//        FileSystemResource file = new FileSystemResource(filePath);
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
+//        headers.add("Content-Disposition", String.format("attachment; filename=\"%s\"", URLEncoder.encode(file.getFilename(),"utf-8")));
+//        headers.add("Access-Control-Expose-Headers", "FileName");
+//        headers.add("FileName", URLEncoder.encode(file.getFilename(),"utf-8"));
+//        headers.add("Pragma", "no-cache");
+//        headers.add("Expires", "0");
 
-        return ResponseEntity
-            .ok()
-            .headers(headers)
-            .contentLength(file.contentLength())
-            .contentType(MediaType.parseMediaType("application/octet-stream"))
-            .body(new InputStreamResource(file.getInputStream()));
+        return featureService.getExcel(projectId);
     }
 }
