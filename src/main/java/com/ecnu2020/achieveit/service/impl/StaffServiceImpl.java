@@ -16,6 +16,10 @@ import tk.mybatis.mapper.entity.Example;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+  * @Author ZC
+  * @Description 实现StaffService
+**/
 @Service
 public class StaffServiceImpl implements StaffService {
 

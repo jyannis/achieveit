@@ -3,9 +3,8 @@ package com.ecnu2020.achieveit.enums;
 import lombok.Getter;
 
 /**
- * @Description
+ * @Description 风险/缺陷状态枚举
  * @Author ZC
- * @Date 2020/3/12 21:28
  **/
 @Getter
 public enum BugEnum {

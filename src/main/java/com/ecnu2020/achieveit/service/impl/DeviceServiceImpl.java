@@ -11,14 +11,15 @@ import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tk.mybatis.mapper.entity.Example;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
- * @Description
+ * @Description 实现DeviceService
  * @Author ZC
- * @Date 2020/3/10 19:59
  **/
 @Service
 public class DeviceServiceImpl implements DeviceService {
@@ -39,7 +40,7 @@ public class DeviceServiceImpl implements DeviceService {
     public Device addDevice(Device device){
         Device deviceExample = deviceMapper.selectOne(device);
         if(deviceExample != null) throw new RRException((ExceptionTypeEnum.ADD_DEVICE_FAIL));
-        deviceMapper.insert(device);
+        deviceMapper.insertSelective(device);
         return deviceMapper.selectOne(device);
     }
 
@@ -52,9 +53,17 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public PageInfo<Device> getDeviceList(PageParam pageParam){
+    public PageInfo<Device> getDeviceList(String projectId,PageParam pageParam){
+        Example example = new Example(Device.class);
+        example.createCriteria().andEqualTo("projectId",projectId);
+        List<Integer> deviceIdLiist = deviceMapper.selectByExample(example)
+                .stream()
+                .map(device -> device.getId())
+                .collect(Collectors.toList());
+        Example example1 = new Example(Device.class);
+        example1.createCriteria().andIn("id",deviceIdLiist);
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
-        List<Device> list = deviceMapper.selectAll();
+        List<Device> list = deviceMapper.selectByExample(example1);
         return new PageInfo<>(list);
     }
 

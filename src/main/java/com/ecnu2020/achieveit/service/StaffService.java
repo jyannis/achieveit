@@ -5,7 +5,10 @@ import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.github.pagehelper.PageInfo;
 
 import java.util.List;
-
+/**
+  * @Author ZC
+  * @Description 人员信息部分接口
+**/
 public interface StaffService {
 
     Staff login(String id, String password);

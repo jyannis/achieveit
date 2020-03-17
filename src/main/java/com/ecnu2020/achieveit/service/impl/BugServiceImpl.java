@@ -18,9 +18,8 @@ import java.util.List;
 
 
 /**
- * @Description
+ * @Description 实现BugService
  * @Author ZC
- * @Date 2020/3/11 14:41
  **/
 @Service
 public class BugServiceImpl implements BugService {
@@ -39,8 +38,8 @@ public class BugServiceImpl implements BugService {
     @Transactional
     public Bug addBug(Bug bug){
         if(bugMapper.selectOne(bug)!=null) throw  new RRException(ExceptionTypeEnum.ADD_BUD_FAIL);
-        bugMapper.insert(bug);
-        return bugMapper.selectOne(bug);
+        bugMapper.insertSelective(bug);
+        return bugMapper.selectOneByExample(bug);
     }
 
     @Override

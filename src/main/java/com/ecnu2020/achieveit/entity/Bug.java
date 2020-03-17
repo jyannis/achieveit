@@ -26,7 +26,7 @@ public class Bug{
 	private String description;
 	private Integer level = 1;
 	private String tracker;
-//	@NotNull(message = "更新时间不为空")
+	@NotNull(message = "更新时间不为空")
 	private Timestamp updateTime;
 	private String status = BugEnum.NON.getStatus();
 

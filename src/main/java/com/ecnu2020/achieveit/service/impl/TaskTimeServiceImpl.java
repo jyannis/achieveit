@@ -3,31 +3,33 @@ package com.ecnu2020.achieveit.service.impl;
 import com.ecnu2020.achieveit.common.RRException;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
-import com.ecnu2020.achieveit.entity.Feature;
 import com.ecnu2020.achieveit.entity.TaskTime;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
 import com.ecnu2020.achieveit.enums.RoleEnum;
 import com.ecnu2020.achieveit.mapper.AuthMapper;
-import com.ecnu2020.achieveit.mapper.FeatureMapper;
+import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.mapper.TaskTimeMapper;
 import com.ecnu2020.achieveit.service.TaskTimeService;
+import com.ecnu2020.achieveit.util.SendMail;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * @Description
+ * @Description 实现TaskTimeService
  * @Author ZC
- * @Date 2020/3/11 20:40
  **/
+@Slf4j
 @Service
 public class TaskTimeServiceImpl implements TaskTimeService {
 
@@ -37,17 +39,22 @@ public class TaskTimeServiceImpl implements TaskTimeService {
     @Autowired
     private AuthMapper authMapper;
 
+
     @Autowired
-    private FeatureMapper featureMapper;
+    private StaffMapper staffMapper;
+
+    @Autowired
+    private SendMail sendMail;
+
 
     @Override
     @Transactional
     public TaskTime createTaskTime(String projectId,TaskTime taskTime){
         if(judgeIfExistAuth(projectId))throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
-        long day = taskTime.getUpdateTime().getTime() - taskTime.getEndTime().getTime()/(24*60*60*1000);
+        long day = (taskTime.getUpdateTime().getTime() - taskTime.getEndTime().getTime())/(24*60*60*1000);
         if(day>3) throw new RRException(ExceptionTypeEnum.ADD_TASKTIME_FAIL);
-        taskTimeMapper.insert(taskTime);
-        //TODO 发送邮件通知上级审核
+        taskTimeMapper.insertSelective(taskTime);
+        sendReviewMail(projectId);
         return taskTimeMapper.selectOne(taskTime);
     }
 
@@ -58,7 +65,7 @@ public class TaskTimeServiceImpl implements TaskTimeService {
         TaskTime taskTimeExample = taskTimeMapper.selectOne(taskTime);
 
         if(status == -1) {
-            //TODO 发送邮件提醒修改工时
+            sendFailMail(taskTimeExample.getBeginTime());
         }
         taskTimeExample.setStatus(status);
         return taskTimeMapper.updateByPrimaryKey(taskTimeExample) > 0;
@@ -69,46 +76,75 @@ public class TaskTimeServiceImpl implements TaskTimeService {
     public Boolean modTaskTime(String projectId,TaskTime taskTime){
         //可以更新开始结束时间，更新时间
         if(judgeIfExistAuth(projectId))throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
-        long day = taskTime.getUpdateTime().getTime() - taskTime.getEndTime().getTime()/(24*60*60*1000);
+        long day = (taskTime.getUpdateTime().getTime() - taskTime.getEndTime().getTime())/(24*60*60*1000);
         if(day>3) throw new RRException(ExceptionTypeEnum.ADD_TASKTIME_FAIL);
-        System.out.println(taskTime.getId());
-        if(taskTime.getStatus()==1) throw new RRException(ExceptionTypeEnum.ADD_TASKTIME_REFUSE);
-        //TODO 发送邮件通知上级审核
+        TaskTime taskTimeExample = taskTimeMapper.selectByPrimaryKey(taskTime.getId());
+        if(taskTimeExample.getStatus()==1) throw new RRException(ExceptionTypeEnum.ADD_TASKTIME_REFUSE);
+        sendReviewMail(projectId);
         return taskTimeMapper.updateByPrimaryKey(taskTime) > 0;
     }
 
     @Override
     public PageInfo<TaskTime> getTaskTimeList(PageParam pageParam){
         UserDTO currentUser  = (UserDTO) SecurityUtils.getSubject().getPrincipal();
-        Auth authExample=Auth.builder().staffId(currentUser.getId()).build();
-        List<String> projectId = authMapper.select(authExample)
-                .stream()
-                .filter(auth -> auth.getRole().equals(RoleEnum.SUPERIOR.getRoleName()))
-                .map(auth -> auth.getProjectId())
-                .collect(Collectors.toList());
-        if(projectId.isEmpty()) return new PageInfo<>(null);
-        Example example = new Example(Feature.class);
-        example.createCriteria().andIn("projectId",projectId);
-        List<Integer> featureId = featureMapper.selectByExample(example)
+        Example example = new Example(TaskTime.class);
+        example.createCriteria().andEqualTo("staffId",currentUser.getId());
+        List<Integer> taskTimeId = taskTimeMapper.selectByExample(example)
                   .stream()
-                  .map(feature -> feature.getId())
+                  .map(taskTime -> taskTime.getId())
                   .collect(Collectors.toList());
-        if(featureId.isEmpty()) return new PageInfo<>(null);
+        if(taskTimeId.isEmpty()) return new PageInfo<>(null);
         Example example1 = new Example(TaskTime.class);
-        example1.createCriteria().andIn("featureId",featureId);
+        example1.createCriteria().andIn("id",taskTimeId);
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
         List<TaskTime> taskTimeList = taskTimeMapper.selectByExample(example1);
         return new PageInfo<>(taskTimeList);
     }
 
-    private Boolean judgeIfExistAuth(String projectId){
-        UserDTO currentUser  = (UserDTO) SecurityUtils.getSubject().getPrincipal();
+    private Boolean judgeIfExistAuth(String projectId) {
+        UserDTO currentUser = (UserDTO) SecurityUtils.getSubject().getPrincipal();
         Example example = new Example(Auth.class);
-        example.createCriteria().andEqualTo("projectId",projectId).andEqualTo("staffId",currentUser.getId());
-        Auth authExample1= authMapper.selectOneByExample(example);
+        example.createCriteria().andEqualTo("projectId", projectId).andEqualTo("staffId", currentUser.getId());
+        Auth authExample1 = authMapper.selectOneByExample(example);
         String str = RoleEnum.TEST_LEADER.getRoleName() + RoleEnum.TESTER.getRoleName() + RoleEnum.DEVELOPER.getRoleName();
-        if(!str.contains(authExample1.getRole()) || authExample1.getTaskTimeAuth() == 0) return true;
+        if (!str.contains(authExample1.getRole()) || authExample1.getTaskTimeAuth() == 0) return true;
         return false;
+    }
+
+   /**
+     * @Author ZC
+     * @Description 发送审核未通过邮件
+   **/
+    private void sendFailMail(Timestamp timestamp){
+        UserDTO userDTO = (UserDTO)SecurityUtils.getSubject().getPrincipal();
+        String failMessage = "您提交的" + timestamp + "工时信息未通过审核，请修改后重新提交";
+        String targetMail = staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail();
+        String failSubject = "工时信息未通过审核";
+        try {
+            sendMail.sendMail(targetMail, failSubject, failMessage);
+        }catch (Exception e){
+            log.warn(e.getMessage());
+        }
+    }
+    /**
+      * @Author ZC
+      * @Description 发送请求审核邮件
+    **/
+    private void sendReviewMail(String projectId){
+        UserDTO userDTO = (UserDTO)SecurityUtils.getSubject().getPrincipal();
+        final  String reviewSubject = "审核工时信息";
+        Auth auth  = Auth.builder()
+                .projectId(projectId).role(RoleEnum.SUPERIOR.getRoleName()).build();
+        String staffId = authMapper.selectOne(auth).getStaffId();
+        System.out.println(staffId);
+        String targetMail = staffMapper.selectByPrimaryKey(staffId).getEmail();
+        System.out.println(targetMail);
+        String reviewMessage = userDTO.getName() + "已提交工时信息，请审核";
+        try {
+            sendMail.sendMail(targetMail, reviewSubject, reviewMessage);
+        }catch (Exception e){
+            log.warn(e.getMessage());
+        }
     }
 }
 
