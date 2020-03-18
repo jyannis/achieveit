@@ -51,7 +51,7 @@ public class MakeExcel<T> {
 
 
         //2.2标题
-        CellRangeAddress callRangeHeader = new CellRangeAddress(0, 0, 0, 3);//起始行,结束行,起始列,结束列
+        CellRangeAddress callRangeHeader = new CellRangeAddress(0, 0, 0, 4);//起始行,结束行,起始列,结束列
         //创建头标题行;并且设置头标题
         XSSFRow rower = sheet.createRow(0);
         XSSFCell celler = rower.createCell(0);
@@ -66,11 +66,12 @@ public class MakeExcel<T> {
         //2.3列名
         XSSFRow propertyRow=sheet.createRow(1);
         propertyRow.createCell(0).setCellValue("序号");
-        propertyRow.createCell(1).setCellValue("功能");
-        propertyRow.createCell(2).setCellValue("子功能");
-        propertyRow.createCell(3).setCellValue("描述");
-        sheet.setColumnWidth(2,25 * 256);
-        sheet.setColumnWidth(3,30 * 256);
+        propertyRow.createCell(1).setCellValue("功能ID");
+        propertyRow.createCell(2).setCellValue("功能");
+        propertyRow.createCell(3).setCellValue("子功能");
+        propertyRow.createCell(4).setCellValue("描述");
+        sheet.setColumnWidth(3,25 * 256);
+        sheet.setColumnWidth(4,30 * 256);
 
 
         //第三步，写入实体数据，实际应用中这些数据从数据库得到,对象封装数据，集合包对象。对象的属性值对应表的每行的值
@@ -83,7 +84,6 @@ public class MakeExcel<T> {
             for(int j = 0;j<fields.length;j++){
                 fields[j].setAccessible(true);
                 if(fields[j].get(t)!=null
-                    &&!fields[j].getName().equals("id")
                     &&!fields[j].getName().equals("projectId")
                     &&!fields[j].getName().equals("deleted")){
                     row1.createCell(k++).setCellValue(fields[j].get(t)+"");
