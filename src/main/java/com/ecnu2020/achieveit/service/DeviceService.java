@@ -7,7 +7,7 @@ import com.github.pagehelper.PageInfo;
 import java.util.List;
 
 /**
- * @Description
+ * @Description 设备部分接口
  * @Author ZC
  * @Date 2020/3/10 19:58
  **/
@@ -19,5 +19,5 @@ public interface DeviceService {
 
     Boolean delDevice(Integer id);
 
-    PageInfo<Device> getDeviceList(PageParam pageParam);
+    PageInfo<Device> getDeviceList(String projectId,PageParam pageParam);
 }

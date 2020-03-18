@@ -28,13 +28,22 @@ public class DeviceController {
     @Auth(role = RoleEnum.CONFIGURATION_MANAGER)
     @PutMapping("/mod")
     @ApiOperation(value = "修改设备信息",response = Boolean.class)
-    public Object modDeviceInfo(@RequestBody @Valid Device device){
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "设备id", paramType = "query",required = true,dataType = "String"),
+    })
+    public Object modDeviceInfo(String projectId, @RequestBody @Valid Device device){
+        device.setProjectId(projectId);
         return deviceService.modDeviceInfo(device);
     }
 
+    @Auth(role = RoleEnum.CONFIGURATION_MANAGER)
     @PostMapping("/add")
     @ApiOperation(value = "增加设备",response = Device.class)
-    public Object addDevice(@RequestBody @Valid Device device){
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "设备id", paramType = "query",required = true,dataType = "String"),
+    })
+    public Object addDevice(String projectId, @RequestBody @Valid Device device){
+        device.setProjectId(projectId);
         return deviceService.addDevice(device);
     }
 
@@ -43,15 +52,20 @@ public class DeviceController {
     @ApiOperation(value = "删除设备",response = Boolean.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "id", value = "设备id", paramType = "query",required = true,dataType = "Integer"),
+            @ApiImplicitParam(name = "projectId", value = "设备id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object delDevice(Integer id){
+    public Object delDevice(String projectId,Integer id){
         return deviceService.delDevice(id);
     }
 
+    @Auth(role = RoleEnum.CONFIGURATION_MANAGER)
     @GetMapping("/getDevice")
     @ApiOperation(value = "获取设备列表",response = PageInfo.class)
-    public Object getDevice(PageParam pageParam){
-        return deviceService.getDeviceList(pageParam);
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "设备id", paramType = "query",required = true,dataType = "String"),
+    })
+    public Object getDevice(String projectId,PageParam pageParam){
+        return deviceService.getDeviceList(projectId,pageParam);
     }
 
 }

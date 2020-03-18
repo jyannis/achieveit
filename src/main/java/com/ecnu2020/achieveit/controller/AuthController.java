@@ -53,7 +53,7 @@ public class AuthController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Boolean modMemberAuth(String projectId, @Valid AddMemberReq addMemberReq){
+    public Object modMemberAuth(String projectId, @Valid AddMemberReq addMemberReq){
         return authService.modMemberAuth(projectId,addMemberReq);
     }
 

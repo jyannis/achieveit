@@ -30,5 +30,6 @@ public class TaskTime {
 	@NotNull
 	private Timestamp updateTime;
 	private Short status = 0;
+	private String staffId;
 
 }

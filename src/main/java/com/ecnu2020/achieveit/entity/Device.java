@@ -16,7 +16,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Device{
+public class Device {
 
 	@Id
 	private Integer id;
@@ -27,5 +27,5 @@ public class Device{
 	@NotNull(message = "不能为空")
 	private Timestamp endTime;
 	private String status = "已归还";
-
+	private String projectId;
 }
