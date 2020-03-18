@@ -69,12 +69,11 @@ public class FeatureServiceImpl implements FeatureService {
 //        }
 //        Page page=new Page(pageParam.getPageNum(),pageParam.getPageSize(),pageInfo.getTotal(),
 //            pageInfo.getPages(),list);
-
-          Example example=new Example(Feature.class);
-          example.createCriteria().andEqualTo("projectId",projectId);
-          PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),
-             pageParam.getOrderBy());
-          List<Feature> featureList= featureMapper.selectByExample(example);
+        Example example=new Example(Feature.class);
+        example.createCriteria().andEqualTo("projectId",projectId).andEqualTo("deleted",0);
+        example.setOrderByClause("feature asc,id asc");
+        PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize());
+        List<Feature> featureList= featureMapper.selectByExample(example);
         return new Page(new PageInfo(featureList));
     }
 
@@ -107,8 +106,8 @@ public class FeatureServiceImpl implements FeatureService {
         Project old=projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old).orElseThrow(()->new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
         Example example=new Example(Feature.class);
-        example.orderBy("feature");
-        example.createCriteria().andEqualTo("projectId",projectId);
+        example.setOrderByClause("feature asc,id asc");
+        example.createCriteria().andEqualTo("projectId",projectId).andEqualTo("deleted",0);
         List<Feature> featureList= featureMapper.selectByExample(example);
         return  makeExcel.makeExcel(featureList,old.getName()+"功能列表",excelUrl);
     }

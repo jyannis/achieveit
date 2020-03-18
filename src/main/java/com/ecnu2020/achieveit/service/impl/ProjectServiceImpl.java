@@ -70,7 +70,8 @@ public class ProjectServiceImpl implements ProjectService {
                 .collect(Collectors.toList());
 
         Example example = new Example(Project.class);
-        example.createCriteria().andIn("id",projectIdList).andIn("status",projectCondition.getStatus());
+        example.createCriteria().andIn("id",projectIdList).andIn("status",
+            projectCondition.getStatus()).andEqualTo("deleted",0);
 
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
 
