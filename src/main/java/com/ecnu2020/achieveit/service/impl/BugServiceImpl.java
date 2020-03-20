@@ -39,7 +39,13 @@ public class BugServiceImpl implements BugService {
     public Bug addBug(Bug bug){
         if(bugMapper.selectOne(bug)!=null) throw  new RRException(ExceptionTypeEnum.ADD_BUD_FAIL);
         bugMapper.insertSelective(bug);
-        return bugMapper.selectOneByExample(bug);
+        return bugMapper.selectOne(bug);
+    }
+
+    @Override
+    @Transactional
+    public Boolean delBug(Integer id){
+        return bugMapper.deleteByPrimaryKey(id) > 0;
     }
 
     @Override
