@@ -49,7 +49,7 @@ public class StaffController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", required = true)
     })
-    public Object ProjectStaff(String projectId,PageParam pageParam){
+    public Object Staff(String projectId,PageParam pageParam){
         return staffService.importStaff(pageParam);
     }
 

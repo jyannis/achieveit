@@ -16,6 +16,8 @@ public interface RiskService {
 
     PageInfo<Risk> getRiskList(String projectId,PageParam pageParam);
 
+    Boolean delRisk(Integer id);
+
     /**
       * @Author ZC
       * @Description 风险跟踪

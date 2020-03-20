@@ -43,7 +43,7 @@ public class RiskController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object addDevice(String projectId,@RequestBody @Valid Risk risk){
+    public Object addRisk(String projectId,@RequestBody @Valid Risk risk){
         risk.setProjectId(projectId);
         return riskService.addRisk(risk);
     }
@@ -54,12 +54,22 @@ public class RiskController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object getDevice(String projectId,PageParam pageParam){
+    public Object getRisk(String projectId,PageParam pageParam){
         return riskService.getRiskList(projectId,pageParam);
     }
 
+    @Auth(role = RoleEnum.PROJECT_MANAGER)
+    @DeleteMapping("/delete")
+    @ApiOperation(value = "删除风险",response = Boolean.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
+    })
+    public Object delRisk(String projectId,@RequestParam Integer id){
+        return riskService.delRisk(id);
+    }
 
-    @Scheduled(cron ="0 0 8 * * ?")
+
+    @Scheduled(cron ="0 0 8 ? * 2")
     public void setRiskMail(){
         riskService.setRiskMail();
     }

@@ -1,15 +1,11 @@
 package com.ecnu2020.achieveit.service.impl;
 
 import com.ecnu2020.achieveit.common.RRException;
-import com.ecnu2020.achieveit.dto.UserDTO;
-import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.Risk;
 import com.ecnu2020.achieveit.entity.Staff;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.BugEnum;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
-import com.ecnu2020.achieveit.enums.RoleEnum;
-import com.ecnu2020.achieveit.mapper.AuthMapper;
 import com.ecnu2020.achieveit.mapper.RiskMapper;
 import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.service.RiskService;
@@ -22,7 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -37,15 +33,13 @@ public class RiskServiceImpl implements RiskService {
     private RiskMapper riskMapper;
 
     @Autowired
-    private AuthMapper authMapper;
-
-    @Autowired
     private StaffMapper staffMapper;
 
     @Autowired
     private SendMail sendMail;
 
     final private String message =  "今天是每周的风险识别追踪日，请召集相关人员识别和跟踪风险";
+    final private String relatedMessage = "您有待处理的风险，请及时处理";
     final private String subject = "风险警告";
 
     @Override
@@ -63,6 +57,12 @@ public class RiskServiceImpl implements RiskService {
     }
 
     @Override
+    @Transactional
+    public Boolean delRisk(Integer id){
+        return  riskMapper.deleteByPrimaryKey(id) > 0;
+    }
+
+    @Override
     public PageInfo<Risk> getRiskList(String projectId,PageParam pageParam){
         Example example = new Example(Risk.class);
         example.createCriteria().andEqualTo("projectId",projectId);
@@ -74,30 +74,71 @@ public class RiskServiceImpl implements RiskService {
     @Override
     public void setRiskMail(){
         String str = BugEnum.NON.getStatus() + BugEnum.GOING.getStatus();
-        List<String> listProject = riskMapper.selectAll()
+        List<String> riskResponlist = riskMapper.selectAll()
                 .stream().filter(risk -> str.contains(risk.getStatus()))
-                .map(risk -> risk.getProjectId())
+                .map(risk -> risk.getResponsible())
                 .distinct()
                 .collect(Collectors.toList());
-        if(listProject.isEmpty()) return;
-        Example example = new Example(Auth.class);
-        example.createCriteria().andIn("projectId",listProject);
-        List<String> staffId = authMapper.selectByExample(example)
-                .stream()
-                .filter(auth -> auth.getRole().equals(RoleEnum.PROJECT_MANAGER.getRoleName()))
-                .map(auth -> auth.getStaffId())
-                .collect(Collectors.toList());
-        if(staffId.isEmpty()) return;
-        Example example1 = new Example(Staff.class);
-        example1.createCriteria().andIn("id",staffId);
-        List<String> emailList = staffMapper.selectByExample(example1)
-                .stream().map(staff -> staff.getEmail()).collect(Collectors.toList());
-        while(emailList.iterator().hasNext()){
+
+        Set<String> related = getRelatedStaff(str);
+        if(related.isEmpty()) return;
+        Iterator<String> iterator = getEmailList(new ArrayList<>(related));
+        /**
+          * @Description 发送邮件给风险相关者
+        **/
+        while(iterator.hasNext()){
             try {
-                sendMail.sendMail(emailList.iterator().next(), subject, message);
+                sendMail.sendMail(iterator.next(), subject, relatedMessage);
             }catch(Exception e){
                 log.warn(e.getMessage());
             }
         }
+
+        if(riskResponlist.isEmpty()) return;
+        iterator = getEmailList(riskResponlist);
+        /**
+          * 发送邮件给项目负责人
+        **/
+        while(iterator.hasNext()){
+            try {
+                sendMail.sendMail(iterator.next(), subject, message);
+            }catch(Exception e){
+                log.warn(e.getMessage());
+            }
+        }
+    }
+
+    /**
+      * @Description 发送邮件给风险相关者
+    **/
+    public Set<String> getRelatedStaff(String str){
+        List<String> relateList = riskMapper.selectAll()
+                .stream().filter(risk -> str.contains(risk.getStatus()))
+                .map(risk -> risk.getRelated())
+                .distinct()
+                .collect(Collectors.toList());
+        Set<String> relatedStaff = new HashSet<>();
+        Iterator<String>  e = relateList.iterator();
+        while(e.hasNext()){
+            List<String> relateId = Arrays.asList((e.next()).split("\\|"));
+            for(int i = 1; i < relateId.size(); i++){
+                if(!relatedStaff.contains(relateId.get(i))){
+                    relatedStaff.add(relateId.get(i));
+                }
+            }
+        }
+        return relatedStaff;
+    }
+
+    /**
+      * @Description 得到list<staff> 的email迭代
+    **/
+    public Iterator<String> getEmailList(List<String> staffId){
+        Example example = new Example(Staff.class);
+        example.createCriteria().andIn("id",staffId);
+        List<String> emailList = staffMapper.selectByExample(example)
+                .stream().map(staff -> staff.getEmail()).collect(Collectors.toList());
+        Iterator<String> iterator = emailList.iterator();
+        return iterator;
     }
 }

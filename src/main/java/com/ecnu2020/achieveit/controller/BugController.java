@@ -31,7 +31,7 @@ public class BugController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object modRiskInfo(String projectId,@RequestBody @Valid Bug bug){
+    public Object modBugInfo(String projectId,@RequestBody @Valid Bug bug){
         bug.setProjectId(projectId);
         return bugService.modBug(bug);
     }
@@ -42,18 +42,27 @@ public class BugController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object addDevice(String projectId,@RequestBody @Valid  Bug bug){
+    public Object addBug(String projectId,@RequestBody @Valid  Bug bug){
         bug.setProjectId(projectId);
         return bugService.addBug(bug);
     }
 
+    @Auth(role = RoleEnum.TESTER)
+    @DeleteMapping("/delete")
+    @ApiOperation(value = "删除缺陷",response = Boolean.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
+    })
+    public Object delBug(String projectId,@RequestParam Integer id){
+        return bugService.delBug(id);
+    }
 
     @GetMapping("/getBug")
     @ApiOperation(value = "获取缺陷列表",response = PageInfo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object getDevice(String projectId,PageParam pageParam){
+    public Object getBug(String projectId,PageParam pageParam){
         return bugService.getBugList(projectId,pageParam);
     }
 }

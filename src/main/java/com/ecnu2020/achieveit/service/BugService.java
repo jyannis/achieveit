@@ -14,5 +14,7 @@ public interface BugService {
 
     Bug addBug(Bug bug);
 
+    Boolean delBug(Integer id);
+
     PageInfo<Bug> getBugList(String projectId,PageParam pageParam);
 }

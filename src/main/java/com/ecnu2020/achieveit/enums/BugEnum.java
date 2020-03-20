@@ -8,7 +8,7 @@ import lombok.Getter;
  **/
 @Getter
 public enum BugEnum {
-    NON("未处理"),
+    NON("未解决"),
     SOLVE("已解决"),
     GOING("进行中");
 
