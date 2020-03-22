@@ -55,6 +55,29 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private SendMail sendMail;
 
+    private static final String BUILD_MESSAGE="%s正在申请立项：%s，请审批。";
+
+    private static final String BUILD_SUBJECT="申请立项审批通知";
+
+    private static final String REVIEW_APPROVE_MESSAGE="您的项目：%s，已审核通过。";
+
+    private static final String REVIEW_SUBJECT="立项审核结果通知";
+
+    private static final String REVIEW_REJECT_MESSAGE="您的项目：%s，被项目上级驳回，立项失败。";
+
+    private static final String APPLY_MESSAGE="项目：%s已提交归档申请，请审核。";
+
+    private static final String APPLY_SUBJECT="归档申请审批通知";
+
+    private static final String FILE_APPROVE_MESSAGE="您的项目：%s，已通过归档申请。";
+
+    private static final String FILE_SUBJECT="归档申请审核结果通知";
+
+    private static final String FILE_REJECT_MESSAGE="您的项目：%s，没有通过归档申请，请于配置管理员协商并修改归档资料，然后重新申请。";
+
+
+
+
     @Override
     public PageInfo<Project> list(ProjectCondition projectCondition , PageParam pageParam) {
         UserDTO currentUser= (UserDTO) SecurityUtils.getSubject().getPrincipal();
@@ -106,6 +129,9 @@ public class ProjectServiceImpl implements ProjectService {
         projectMapper.insertSelective(project);
 
         //发送通知给项目上级
+        UserDTO currentUser= (UserDTO) SecurityUtils.getSubject().getPrincipal();
+        String message=String.format(BUILD_MESSAGE,currentUser.getName(),project.getName());
+        sendMail.sendStaffEmail(Arrays.asList(superiorId),BUILD_SUBJECT,message);
 
         return projectMapper.selectOne(project);
     }
@@ -127,7 +153,16 @@ public class ProjectServiceImpl implements ProjectService {
         //通过
         if(status.equals(1)){
             if(res=updateStatus(old,ProjectStatusEnum.REVIEW.getStatus())){
-                //发送邮件给配置管理员, EPG Leader, QA Manager
+                //发送邮件给项目经理、配置管理员, EPG Leader, QA Manager
+
+                List<String> staffIdList=getStaffIdList(projectId,Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName(),
+                    RoleEnum.CONFIGURATION_MANAGER.getRoleName(),
+                    RoleEnum.EPG_LEADER.getRoleName(),
+                    RoleEnum.QA_MANAGER.getRoleName()));
+
+                String message=String.format(REVIEW_APPROVE_MESSAGE,old.getName());
+
+                sendMail.sendStaffEmail(staffIdList,REVIEW_SUBJECT,message);
 
             }
         }
@@ -135,6 +170,13 @@ public class ProjectServiceImpl implements ProjectService {
         else if(status.equals(-1)){
             if(res=updateStatus(old,ProjectStatusEnum.REJECTED.getStatus())){
                 //发送邮件给项目经理
+
+                List<String> staffIdList=getStaffIdList(projectId,
+                    Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
+
+                String message=String.format(REVIEW_REJECT_MESSAGE,old.getName());
+
+                sendMail.sendStaffEmail(staffIdList,REVIEW_SUBJECT,message);
 
             }
         } else throw new RRException(ExceptionTypeEnum.INVALID_STATUS);
@@ -165,10 +207,17 @@ public class ProjectServiceImpl implements ProjectService {
         Boolean res;
         if(res=updateStatus(old,ProjectStatusEnum.APPLY.getStatus())){
             //发送邮件给组织配置管理员
+            List<String> staffIdList=getStaffIdList(projectId,
+                Arrays.asList(RoleEnum.CONFIGURATION_MANAGER.getRoleName()));
+
+            String message=String.format(APPLY_MESSAGE,old.getName());
+
+            sendMail.sendStaffEmail(staffIdList,APPLY_SUBJECT,message);
 
         }
         return res;
     }
+
 
     @Override
     public Boolean file(String projectId, Integer status) {
@@ -182,7 +231,12 @@ public class ProjectServiceImpl implements ProjectService {
         if (status.equals(1)) {
             if (res = updateStatus(old, ProjectStatusEnum.FILE.getStatus())) {
                 //发送邮件给项目经理，通知归档申请已通过
+                List<String> staffIdList=getStaffIdList(projectId,
+                    Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
 
+                String message=String.format(FILE_APPROVE_MESSAGE,old.getName());
+
+                sendMail.sendStaffEmail(staffIdList,FILE_SUBJECT,message);
             }
         }
         //拒绝
@@ -190,7 +244,12 @@ public class ProjectServiceImpl implements ProjectService {
             //变回已完结
             updateStatus(old, ProjectStatusEnum.CLOSE.getStatus());
             //发送邮件给项目经理 提示归档申请未通过，需要修改后重新提交申请
+            List<String> staffIdList=getStaffIdList(projectId,
+                Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
 
+            String message=String.format(FILE_REJECT_MESSAGE,old.getName());
+
+            sendMail.sendStaffEmail(staffIdList,FILE_SUBJECT,message);
 
         } else throw new RRException(ExceptionTypeEnum.INVALID_STATUS);
         return res;
@@ -209,6 +268,21 @@ public class ProjectServiceImpl implements ProjectService {
     private Boolean updateStatus(Project old, String status){
         old.setStatus(status);
         return projectMapper.updateByPrimaryKey(old)>0;
+    }
+
+    private List<String> getStaffIdList(String projectId,List<String> roles){
+        Example authExample=new Example(Auth.class);
+        authExample.createCriteria().andEqualTo("projectId",projectId).andIn("role",
+            roles);
+
+        List<String> staffIdList=authMapper.selectByExample(authExample)
+            .stream()
+            .map(auth -> auth.getStaffId())
+            .distinct()
+            .collect(Collectors.toList());
+
+        return staffIdList;
+
     }
 
 }

@@ -1,6 +1,12 @@
 package com.ecnu2020.achieveit.util;
 
+import com.ecnu2020.achieveit.entity.Staff;
+import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.sun.mail.util.MailSSLSocketFactory;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -9,13 +15,19 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
+
+import tk.mybatis.mapper.entity.Example;
 
 /**
  * JavaMail发送邮件:前提是QQ邮箱里帐号设置要开启POP3/SMTP协议
  * @author yan on 2020-03-07
  */
 @Component
+@Slf4j
 public class SendMail {
 
     @Value("${mail.user}")
@@ -26,6 +38,9 @@ public class SendMail {
 
     @Value("${mail.internetAddress}")
     private String internetAddress;
+
+    @Autowired
+    private StaffMapper staffMapper;
 
 
     /**
@@ -73,6 +88,23 @@ public class SendMail {
         message.setContent(mailMessage, "text/html;charset=UTF-8");
 // 返回创建好的邮件对象
         return message;
+    }
+
+
+    public void sendStaffEmail(List<String> staffIdList,String subject, String mailMessage){
+        Example example = new Example(Staff.class);
+        example.createCriteria().andIn("id",staffIdList);
+
+        List<String> emailList = staffMapper.selectByExample(example)
+            .stream().map(staff -> staff.getEmail()).collect(Collectors.toList());
+
+        emailList.stream().forEach(email->{
+            try {
+                sendMail(email, subject, mailMessage);
+            }catch(Exception e){
+                log.warn(e.getMessage());
+            }
+        });
     }
 
 

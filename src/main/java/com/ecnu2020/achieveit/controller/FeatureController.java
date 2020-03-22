@@ -15,11 +15,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.core.io.InputStreamResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,7 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.net.URLEncoder;
 import java.util.List;
 
 @RestController
@@ -81,7 +75,7 @@ public class FeatureController {
     }
 
     @GetMapping("/getExcel")
-    @ApiOperation(value = "下载功能列表excel",response = Boolean.class)
+    @ApiOperation(value = "下载功能列表excel",response = String.class)
     @ApiImplicitParams({
         @ApiImplicitParam(name = "featureList", value = "(子)功能数组", required = true),
     })
@@ -98,4 +92,15 @@ public class FeatureController {
 
         return featureService.getExcel(projectId);
     }
+
+    @Auth(role = RoleEnum.PROJECT_MANAGER)
+    @GetMapping("/template")
+    @ApiOperation(value = "下载功能模板",response = String.class)
+    @ApiImplicitParams({
+    })
+    public Object template(){
+        return featureService.getTemplate();
+    }
+
+
 }

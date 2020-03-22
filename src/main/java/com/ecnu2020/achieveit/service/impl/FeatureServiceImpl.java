@@ -19,10 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import tk.mybatis.mapper.entity.Example;
 
@@ -110,5 +108,10 @@ public class FeatureServiceImpl implements FeatureService {
         example.createCriteria().andEqualTo("projectId",projectId).andEqualTo("deleted",0);
         List<Feature> featureList= featureMapper.selectByExample(example);
         return  makeExcel.makeExcel(featureList,old.getName()+"功能列表",excelUrl);
+    }
+
+    @Override
+    public String getTemplate() {
+        return excelUrl + "/" + "功能模板.xlsx";
     }
 }
