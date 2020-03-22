@@ -19,4 +19,6 @@ public interface FeatureService {
     Boolean delete(List<Integer> featureIdList);
 
     String getExcel(String projectId) throws Exception;
+
+    String getTemplate();
 }
