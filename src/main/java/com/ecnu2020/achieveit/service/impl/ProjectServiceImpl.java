@@ -1,5 +1,6 @@
 package com.ecnu2020.achieveit.service.impl;
 
+import com.ecnu2020.achieveit.common.Page;
 import com.ecnu2020.achieveit.common.RRException;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
@@ -25,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -92,20 +94,26 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(auth -> auth.getProjectId())
                 .collect(Collectors.toList());
 
-        Example example = new Example(Project.class);
-        example.createCriteria().andIn("id",projectIdList).andIn("status",
-            projectCondition.getStatus()).andEqualTo("deleted",0);
+        List<Project> content=new ArrayList<>();
 
-        PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
+        if(!projectIdList.isEmpty()){
+            Example example = new Example(Project.class);
+            example.createCriteria().andIn("id",projectIdList).andIn("status",
+                projectCondition.getStatus()).andEqualTo("deleted",0);
 
-        List<Project> content=projectMapper.selectByExample(example)
+
+            content=projectMapper.selectByExample(example)
 //            .stream()
 //            //关键字
 //            .filter(project -> project.toString().contains(projectCondition.getKeyWord()))
 //            .collect(Collectors.toList())
-            ;
+                ;
 
-        return new PageInfo<>(content);
+            return new PageInfo<>(content);
+        }
+        PageInfo<Project> res=new PageInfo<>(content);
+        res.setPageSize(10);
+        return res;
     }
 
     @Override
