@@ -51,10 +51,9 @@ public class DeviceController {
     @DeleteMapping("/delete")
     @ApiOperation(value = "删除设备",response = Boolean.class)
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "id", value = "设备id", paramType = "query",required = true,dataType = "Integer"),
             @ApiImplicitParam(name = "projectId", value = "设备id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object delDevice(String projectId,Integer id){
+    public Object delDevice(String projectId,@RequestParam Integer id){
         return deviceService.delDevice(id);
     }
 
