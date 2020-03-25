@@ -54,16 +54,16 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public PageInfo<Device> getDeviceList(String projectId,PageParam pageParam){
+        Device tempDevice = Device.builder().projectId(projectId).build();
+        List<Integer> deviceIdList = deviceMapper.select(tempDevice)
+                    .stream()
+                    .map(device -> device.getId())
+                    .collect(Collectors.toList());
+        if(deviceIdList.isEmpty()) return new PageInfo<>();
         Example example = new Example(Device.class);
-        example.createCriteria().andEqualTo("projectId",projectId);
-        List<Integer> deviceIdLiist = deviceMapper.selectByExample(example)
-                .stream()
-                .map(device -> device.getId())
-                .collect(Collectors.toList());
-        Example example1 = new Example(Device.class);
-        example1.createCriteria().andIn("id",deviceIdLiist);
+        example.createCriteria().andIn("id",deviceIdList);
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
-        List<Device> list = deviceMapper.selectByExample(example1);
+        List<Device> list = deviceMapper.selectByExample(example);
         return new PageInfo<>(list);
     }
 

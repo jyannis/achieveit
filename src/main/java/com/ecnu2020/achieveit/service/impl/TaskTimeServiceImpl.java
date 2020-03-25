@@ -87,17 +87,16 @@ public class TaskTimeServiceImpl implements TaskTimeService {
     @Override
     public PageInfo<TaskTime> getTaskTimeList(PageParam pageParam){
         UserDTO currentUser  = (UserDTO) SecurityUtils.getSubject().getPrincipal();
-        Example example = new Example(TaskTime.class);
-        example.createCriteria().andEqualTo("staffId",currentUser.getId());
-        List<Integer> taskTimeId = taskTimeMapper.selectByExample(example)
+        TaskTime tempTaskTime = TaskTime.builder().staffId(currentUser.getId()).build();
+        List<Integer> taskTimeId = taskTimeMapper.select(tempTaskTime)
                   .stream()
                   .map(taskTime -> taskTime.getId())
                   .collect(Collectors.toList());
-        if(taskTimeId.isEmpty()) return new PageInfo<>(null);
-        Example example1 = new Example(TaskTime.class);
-        example1.createCriteria().andIn("id",taskTimeId);
+        if(taskTimeId.isEmpty()) return new PageInfo<>();
+        Example example = new Example(TaskTime.class);
+        example.createCriteria().andIn("id",taskTimeId);
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
-        List<TaskTime> taskTimeList = taskTimeMapper.selectByExample(example1);
+        List<TaskTime> taskTimeList = taskTimeMapper.selectByExample(example);
         return new PageInfo<>(taskTimeList);
     }
 

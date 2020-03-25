@@ -64,11 +64,10 @@ public class RiskServiceImpl implements RiskService {
 
     @Override
     public PageInfo<Risk> getRiskList(String projectId,PageParam pageParam){
-        Example example = new Example(Risk.class);
-        example.createCriteria().andEqualTo("projectId",projectId);
+        Risk risk = Risk.builder().projectId(projectId).build();
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
-        List<Risk> bugList = riskMapper.selectByExample(example);
-        return new PageInfo<>(bugList);
+        List<Risk> riskList = riskMapper.select(risk);
+        return new PageInfo<>(riskList);
     }
 
     @Override
