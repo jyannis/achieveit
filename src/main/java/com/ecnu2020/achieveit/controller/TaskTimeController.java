@@ -25,7 +25,7 @@ public class TaskTimeController {
     @Autowired
     private TaskTimeService taskTimeService;
 
-//    @Auth(role = RoleEnum.NON)
+
     @PostMapping("/add")
     @ApiOperation(value = "新增工时信息",response = TaskTime.class)
     @ApiImplicitParams({

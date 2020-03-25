@@ -48,7 +48,6 @@ public class RiskController {
         return riskService.addRisk(risk);
     }
 
-    @Auth(role = RoleEnum.PROJECT_MANAGER)
     @GetMapping("/getRisk")
     @ApiOperation(value = "获取风险列表",response = PageInfo.class)
     @ApiImplicitParams({
