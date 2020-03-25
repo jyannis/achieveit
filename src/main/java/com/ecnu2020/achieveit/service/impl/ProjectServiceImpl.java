@@ -133,8 +133,8 @@ public class ProjectServiceImpl implements ProjectService {
                                     .staffId(superiorId).role(RoleEnum.SUPERIOR.getRoleName())
                                     .fileAuth((short) 2).gitAuth((short) 2).taskTimeAuth((short)1)
                                     .build();
-        authService.addMemberAuth(project.getId(),addMemberReq);
         projectMapper.insertSelective(project);
+        authService.addMemberAuth(project.getId(),addMemberReq);
 
         //发送通知给项目上级
         UserDTO currentUser= (UserDTO) SecurityUtils.getSubject().getPrincipal();
