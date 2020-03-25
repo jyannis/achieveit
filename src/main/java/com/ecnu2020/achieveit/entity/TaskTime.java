@@ -22,6 +22,7 @@ public class TaskTime {
 	@NotNull
 	private Integer featureId;
 	private String description;
+	@NotNull
 	private Integer activityId;
 	@NotNull
 	private Timestamp beginTime;
@@ -30,6 +31,7 @@ public class TaskTime {
 	@NotNull
 	private Timestamp updateTime;
 	private Short status = 0;
+	@NotNull
 	private String staffId;
 
 }

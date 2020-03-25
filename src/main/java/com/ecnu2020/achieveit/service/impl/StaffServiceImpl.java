@@ -59,6 +59,7 @@ public class StaffServiceImpl implements StaffService {
                 .stream()
                 .map(auth ->  auth.getStaffId())
                 .collect(Collectors.toList());
+        if(staffId.isEmpty()) return new PageInfo<>();
         Example example = new Example(Staff.class);
         example.createCriteria().andIn("id",staffId);
         List<String> id = staffMapper.selectByExample(example)

@@ -50,10 +50,9 @@ public class BugServiceImpl implements BugService {
 
     @Override
     public PageInfo<Bug> getBugList(String projectId,PageParam pageParam){
-        Example example = new Example(Bug.class);
-        example.createCriteria().andEqualTo("projectId",projectId);
+        Bug bug = Bug.builder().projectId(projectId).build();
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
-        List<Bug> bugList = bugMapper.selectByExample(example);
+        List<Bug> bugList = bugMapper.select(bug);
         return new PageInfo<>(bugList);
     }
 }
