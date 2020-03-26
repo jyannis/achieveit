@@ -31,7 +31,6 @@ public class StaffController {
     @Autowired
     private StaffService staffService;
 
-    @Auth(role = RoleEnum.PROJECT_MANAGER)
     @GetMapping("/projectStaff")
     @ApiOperation(value = "员工信息",response = PageInfo.class)
     @ApiImplicitParams({

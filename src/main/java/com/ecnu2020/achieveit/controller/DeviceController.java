@@ -57,7 +57,6 @@ public class DeviceController {
         return deviceService.delDevice(id);
     }
 
-    @Auth(role = RoleEnum.CONFIGURATION_MANAGER)
     @GetMapping("/getDevice")
     @ApiOperation(value = "获取设备列表",response = PageInfo.class)
     @ApiImplicitParams({
