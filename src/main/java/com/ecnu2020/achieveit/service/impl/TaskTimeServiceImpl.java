@@ -88,10 +88,27 @@ public class TaskTimeServiceImpl implements TaskTimeService {
     public PageInfo<TaskTime> getTaskTimeList(PageParam pageParam){
         UserDTO currentUser  = (UserDTO) SecurityUtils.getSubject().getPrincipal();
         TaskTime tempTaskTime = TaskTime.builder().staffId(currentUser.getId()).build();
-        List<Integer> taskTimeId = taskTimeMapper.select(tempTaskTime)
-                  .stream()
-                  .map(taskTime -> taskTime.getId())
-                  .collect(Collectors.toList());
+        Auth auth = Auth.builder().staffId(currentUser.getId()).build();
+        List<String> projectId = authMapper.select(auth)
+                                .stream()
+                                .filter(auth1 -> auth1.getRole().equals(RoleEnum.SUPERIOR.getRoleName()))
+                                .map(e -> e.getProjectId())
+                                .collect(Collectors.toList());
+        List<Integer> taskTimeId;
+        if(!projectId.isEmpty()) {
+            Example example1 = new Example(TaskTime.class);
+            example1.createCriteria().andIn("projectId", projectId);
+            taskTimeId = taskTimeMapper.selectByExample(example1)
+                             .stream()
+                             .filter(taskTime -> taskTime.getStatus() == 0)
+                             .map(taskTime -> taskTime.getId())
+                            .collect(Collectors.toList());
+        }else{
+            taskTimeId = taskTimeMapper.select(tempTaskTime)
+                    .stream()
+                    .map(taskTime -> taskTime.getId())
+                    .collect(Collectors.toList());
+        }
         if(taskTimeId.isEmpty()) return new PageInfo<>();
         Example example = new Example(TaskTime.class);
         example.createCriteria().andIn("id",taskTimeId);

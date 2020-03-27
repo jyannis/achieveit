@@ -45,7 +45,6 @@ public class TaskTimeController {
 
     })
     public Object  ReviewTaskTime(String projectId, Integer id, Short status){
-        System.out.println(status);
         return taskTimeService.ReviewTaskTime(id,status);
     }
 
