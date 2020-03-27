@@ -21,6 +21,8 @@ public class TaskTime {
 	private Integer id;
 	@NotNull
 	private Integer featureId;
+	@NotNull
+	private String projectId;
 	private String description;
 	@NotNull
 	private Integer activityId;
