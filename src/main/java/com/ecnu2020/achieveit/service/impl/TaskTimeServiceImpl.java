@@ -3,11 +3,13 @@ package com.ecnu2020.achieveit.service.impl;
 import com.ecnu2020.achieveit.common.RRException;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
+import com.ecnu2020.achieveit.entity.Feature;
 import com.ecnu2020.achieveit.entity.TaskTime;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
 import com.ecnu2020.achieveit.enums.RoleEnum;
 import com.ecnu2020.achieveit.mapper.AuthMapper;
+import com.ecnu2020.achieveit.mapper.FeatureMapper;
 import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.mapper.TaskTimeMapper;
 import com.ecnu2020.achieveit.service.TaskTimeService;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -42,6 +45,9 @@ public class TaskTimeServiceImpl implements TaskTimeService {
 
     @Autowired
     private StaffMapper staffMapper;
+
+    @Autowired
+    private FeatureMapper featureMapper;
 
     @Autowired
     private SendMail sendMail;
@@ -88,10 +94,34 @@ public class TaskTimeServiceImpl implements TaskTimeService {
     public PageInfo<TaskTime> getTaskTimeList(PageParam pageParam){
         UserDTO currentUser  = (UserDTO) SecurityUtils.getSubject().getPrincipal();
         TaskTime tempTaskTime = TaskTime.builder().staffId(currentUser.getId()).build();
-        List<Integer> taskTimeId = taskTimeMapper.select(tempTaskTime)
-                  .stream()
-                  .map(taskTime -> taskTime.getId())
-                  .collect(Collectors.toList());
+        Auth auth = Auth.builder().staffId(currentUser.getId()).build();
+        List<String> projectId = authMapper.select(auth)
+                                .stream()
+                                .filter(auth1 -> auth1.getRole().equals(RoleEnum.SUPERIOR.getRoleName()))
+                                .map(e -> e.getProjectId())
+                                .collect(Collectors.toList());
+        List<Integer> taskTimeId;
+        if(!projectId.isEmpty()) {
+            Example example1 = new Example(Feature.class);
+            example1.createCriteria().andIn("projectId", projectId);
+            List<Integer> Id = featureMapper.selectByExample(example1)
+                    .stream()
+                    .map(feature -> feature.getId())
+                    .collect(Collectors.toList());
+            if(Id.isEmpty()) return new PageInfo<>();
+            Example example2 = new Example(TaskTime.class);
+            example2.createCriteria().andIn("featureId", Id);
+            taskTimeId = taskTimeMapper.selectByExample(example2)
+                             .stream()
+                             .filter(taskTime -> taskTime.getStatus() == 0)
+                             .map(taskTime -> taskTime.getId())
+                            .collect(Collectors.toList());
+        }else{
+            taskTimeId = taskTimeMapper.select(tempTaskTime)
+                    .stream()
+                    .map(taskTime -> taskTime.getId())
+                    .collect(Collectors.toList());
+        }
         if(taskTimeId.isEmpty()) return new PageInfo<>();
         Example example = new Example(TaskTime.class);
         example.createCriteria().andIn("id",taskTimeId);
