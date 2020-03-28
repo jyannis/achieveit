@@ -127,5 +127,15 @@ public class ProjectController {
         return projectService.delete(projectId);
     }
 
+    @Auth(role = RoleEnum.PROJECT_MANAGER)
+    @PutMapping("/onGoing")
+    @ApiOperation(value = "项目变为进行中",response = Boolean.class)
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
+    })
+    public Object onGoing(String projectId){
+        return projectService.onGoing(projectId);
+    }
+
 
 }

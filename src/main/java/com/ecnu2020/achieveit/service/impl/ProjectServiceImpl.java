@@ -96,16 +96,22 @@ public class ProjectServiceImpl implements ProjectService {
 
         if (!projectIdList.isEmpty()) {
             Example example = new Example(Project.class);
-            example.createCriteria().andIn("id", projectIdList).andIn("status",
-                projectCondition.getStatus()).andEqualTo("deleted", 0);
-
-
-            content = projectMapper.selectByExample(example)
-//            .stream()
-//            //关键字
-//            .filter(project -> project.toString().contains(projectCondition.getKeyWord()))
-//            .collect(Collectors.toList())
+            example.createCriteria()
+                .orLike("name", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("description", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("technology", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("business", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("feature", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("customerInfo", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("vmSpace", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("gitPath", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("filePath", "%" + projectCondition.getKeyWord() + "%")
             ;
+
+            example.and(example.createCriteria().andIn("id", projectIdList).andIn("status",
+                projectCondition.getStatus()).andEqualTo("deleted", 0));
+
+            content = projectMapper.selectByExample(example);
 
             return new PageInfo<>(content);
         }
@@ -284,6 +290,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     private List<String> getStaffIdList(String projectId, List<String> roles) {
+        if (roles.isEmpty()) {
+            return new ArrayList<>();
+        }
         Example authExample = new Example(Auth.class);
         authExample.createCriteria().andEqualTo("projectId", projectId).andIn("role",
             roles);
@@ -298,4 +307,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     }
 
+    @Override
+    public Boolean onGoing(String projectId) {
+        Project old = projectMapper.selectByPrimaryKey(projectId);
+        Optional.ofNullable(old)
+            .filter(p -> ProjectStatusEnum.REVIEW.getStatus().equals(p.getStatus()))
+            .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
+        return updateStatus(old, ProjectStatusEnum.ONGOING.getStatus());
+    }
 }
