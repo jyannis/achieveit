@@ -96,16 +96,22 @@ public class ProjectServiceImpl implements ProjectService {
 
         if (!projectIdList.isEmpty()) {
             Example example = new Example(Project.class);
-            example.createCriteria().andIn("id", projectIdList).andIn("status",
-                projectCondition.getStatus()).andEqualTo("deleted", 0);
-
-
-            content = projectMapper.selectByExample(example)
-//            .stream()
-//            //关键字
-//            .filter(project -> project.toString().contains(projectCondition.getKeyWord()))
-//            .collect(Collectors.toList())
+            example.createCriteria()
+                .orLike("name", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("description", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("technology", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("business", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("feature", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("customerInfo", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("vmSpace", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("gitPath", "%" + projectCondition.getKeyWord() + "%")
+                .orLike("filePath", "%" + projectCondition.getKeyWord() + "%")
             ;
+
+            example.and(example.createCriteria().andIn("id", projectIdList).andIn("status",
+                projectCondition.getStatus()).andEqualTo("deleted", 0));
+
+            content = projectMapper.selectByExample(example);
 
             return new PageInfo<>(content);
         }
@@ -121,19 +127,36 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Transactional
-    public Project build(Project project, String superiorId) {
+    public Project build(Project project, String superiorId, String configManagerId,
+                         String qaManagerId, String epgLeaderId) {
         Project old = projectMapper.selectByPrimaryKey(project.getId());
         if (old != null) throw new RRException(ExceptionTypeEnum.PROJECTID_REPEATED);
         Staff superior = staffMapper.selectByPrimaryKey(superiorId);
         Optional.ofNullable(superior)
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.INVALID_STAFF));
+
+        Staff configManager = staffMapper.selectByPrimaryKey(configManagerId);
+        Optional.ofNullable(configManager)
+            .orElseThrow(() -> new RRException(ExceptionTypeEnum.INVALID_STAFF));
+
+        Staff qaManager = staffMapper.selectByPrimaryKey(qaManagerId);
+        Optional.ofNullable(qaManager)
+            .orElseThrow(() -> new RRException(ExceptionTypeEnum.INVALID_STAFF));
+
+        Staff epgLeader = staffMapper.selectByPrimaryKey(epgLeaderId);
+        Optional.ofNullable(epgLeader)
+            .orElseThrow(() -> new RRException(ExceptionTypeEnum.INVALID_STAFF));
+
+        //分配项目上级
         AddMemberReq addMemberReq = AddMemberReq.builder()
-            .staffId(superiorId).role(RoleEnum.SUPERIOR.getRoleName())
+            .staffId(superiorId)
+            .role(RoleEnum.SUPERIOR.getRoleName())
             .fileAuth((short) 2).gitAuth((short) 2).taskTimeAuth((short) 1)
             .build();
         projectMapper.insertSelective(project);
         authService.addMemberAuth(project.getId(), addMemberReq);
 
+        //分配项目经理
         UserDTO currentUser = (UserDTO) SecurityUtils.getSubject().getPrincipal();
         AddMemberReq manager = AddMemberReq.builder()
             .staffId(currentUser.getId())
@@ -141,6 +164,30 @@ public class ProjectServiceImpl implements ProjectService {
             .fileAuth((short) 2).gitAuth((short) 2).taskTimeAuth((short) 1)
             .build();
         authService.addMemberAuth(project.getId(), manager);
+
+        //分配组织配置管理员
+        AddMemberReq configAuth = AddMemberReq.builder()
+            .staffId(configManagerId)
+            .role(RoleEnum.CONFIGURATION_MANAGER.getRoleName())
+            .fileAuth((short) 0).gitAuth((short) 0).taskTimeAuth((short) 0)
+            .build();
+        authService.addMemberAuth(project.getId(), configAuth);
+
+        //分配QA manager
+        AddMemberReq qaAuth = AddMemberReq.builder()
+            .staffId(qaManagerId)
+            .role(RoleEnum.QA_MANAGER.getRoleName())
+            .fileAuth((short) 0).gitAuth((short) 0).taskTimeAuth((short) 0)
+            .build();
+        authService.addMemberAuth(project.getId(), qaAuth);
+
+        //分配EPG leader
+        AddMemberReq epgAuth = AddMemberReq.builder()
+            .staffId(epgLeaderId)
+            .role(RoleEnum.EPG_LEADER.getRoleName())
+            .fileAuth((short) 0).gitAuth((short) 0).taskTimeAuth((short) 0)
+            .build();
+        authService.addMemberAuth(project.getId(), epgAuth);
 
         //发送通知给项目上级
         String message = String.format(BUILD_MESSAGE, currentUser.getName(), project.getName());
@@ -284,6 +331,9 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     private List<String> getStaffIdList(String projectId, List<String> roles) {
+        if (roles.isEmpty()) {
+            return new ArrayList<>();
+        }
         Example authExample = new Example(Auth.class);
         authExample.createCriteria().andEqualTo("projectId", projectId).andIn("role",
             roles);
@@ -298,4 +348,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     }
 
+    @Override
+    public Boolean onGoing(String projectId) {
+        Project old = projectMapper.selectByPrimaryKey(projectId);
+        Optional.ofNullable(old)
+            .filter(p -> ProjectStatusEnum.REVIEW.getStatus().equals(p.getStatus()))
+            .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
+        return updateStatus(old, ProjectStatusEnum.ONGOING.getStatus());
+    }
 }

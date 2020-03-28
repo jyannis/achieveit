@@ -92,6 +92,9 @@ public class SendMail {
 
 
     public void sendStaffEmail(List<String> staffIdList,String subject, String mailMessage){
+        if(staffIdList.isEmpty()){
+            return;
+        }
         Example example = new Example(Staff.class);
         example.createCriteria().andIn("id",staffIdList);
 

@@ -7,7 +7,8 @@ import com.github.pagehelper.PageInfo;
 
 public interface ProjectService {
 
-    Project build(Project project, String superiorId);
+    Project build(Project project, String superiorId, String configManagerId,
+                  String qaManagerId, String epgLeaderId);
 
     Boolean review(String projectId, Integer status);
 
@@ -27,4 +28,6 @@ public interface ProjectService {
     Boolean delete(String projectId);
 
     Boolean apply(String projectId);
+
+    Boolean onGoing(String projectId);
 }

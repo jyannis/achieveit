@@ -34,6 +34,9 @@ public class Project{
 	private String business;
 	private String feature;
 	private String status= ProjectStatusEnum.BUILD.getStatus();
+	private String gitPath;
+	private String filePath;
+	private String vmSpace;
 	@JsonIgnore
 	private Short deleted=0;
 
