@@ -26,13 +26,12 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    @Auth(role = RoleEnum.PROJECT_MANAGER)
     @PostMapping("/add")
     @ApiOperation(value = "添加项目成员权限",response = Auth.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object addMemberAuth(String projectId, @Valid AddMemberReq addMemberReq){
+    public Object addMemberAuth(String projectId,@RequestBody @Valid AddMemberReq addMemberReq){
         return authService.addMemberAuth(projectId,addMemberReq);
     }
 
@@ -53,7 +52,7 @@ public class AuthController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object modMemberAuth(String projectId, @Valid AddMemberReq addMemberReq){
+    public Object modMemberAuth(String projectId,@RequestBody @Valid AddMemberReq addMemberReq){
         return authService.modMemberAuth(projectId,addMemberReq);
     }
 
@@ -66,6 +65,15 @@ public class AuthController {
     public Object getProjectMember(String projectId,String keyword, PageParam pageParam){
         if(keyword == null) keyword = "";
         return authService.getProjectMember(projectId,keyword,pageParam);
+    }
+
+    @GetMapping("/getRoles")
+    @ApiOperation(value = "查看项目成员角色",response = PageInfo.class)
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
+    })
+    public Object getRoleMember(String projectId,PageParam pageParam){
+        return authService.getRoles(projectId,pageParam);
     }
 
 }

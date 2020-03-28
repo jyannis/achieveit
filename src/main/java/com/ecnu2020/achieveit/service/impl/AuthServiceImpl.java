@@ -5,6 +5,7 @@ import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.Staff;
 import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
+import com.ecnu2020.achieveit.entity.request_response.auth.GetRoleRep;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
 import com.ecnu2020.achieveit.enums.ProjectStatusEnum;
@@ -14,14 +15,17 @@ import com.ecnu2020.achieveit.mapper.ProjectMapper;
 import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.service.AuthService;
 
+import com.ecnu2020.achieveit.util.SendMail;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,6 +35,7 @@ import java.util.stream.Collectors;
   * @Description 实现AuthService
 **/
 @Service
+@Slf4j
 public class AuthServiceImpl implements AuthService {
 
     @Autowired
@@ -41,6 +46,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     ProjectMapper projectMapper;
+
+    @Autowired
+    SendMail sendMail;
+
+    private static final String DISPUTE_EPG = "已分配 EPG";
+    private static final String DISPUTE_QA = "已分配 QA";
+    private static final String SUBJECT = "项目人员变更";
 
     @Override
     public Boolean checkManager(UserDTO principal) {
@@ -65,6 +77,27 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public Auth addMemberAuth(String projectId, AddMemberReq addMemberReq) {
         if(!isProjectOver(projectId)) throw new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR);
+        UserDTO userDTO = (UserDTO) SecurityUtils.getSubject().getPrincipal();
+        Auth auth = Auth.builder().staffId(userDTO.getId()).projectId(projectId).build();
+        Optional.ofNullable(authMapper.selectOne(auth)).orElseThrow(() -> new RRException(ExceptionTypeEnum.PERMISSION_DENIED));
+        String role = authMapper.selectOne(auth).getRole();
+        if(role.equals(RoleEnum.EPG_LEADER.getRoleName())){
+            addMemberReq.setRole(RoleEnum.DEVELOPER.getRoleName());
+            try {
+                sendMail.sendMail(staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail(), SUBJECT, DISPUTE_EPG);
+            }catch (Exception e){
+                log.warn(e.getMessage());
+            }
+        }else if(role.equals(RoleEnum.QA_MANAGER.getRoleName())){
+            addMemberReq.setRole(RoleEnum.TESTER.getRoleName());
+            try {
+                sendMail.sendMail(staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail(), SUBJECT, DISPUTE_QA);
+            }catch (Exception e){
+                log.warn(e.getMessage());
+            }
+        }else if(!role.equals(RoleEnum.PROJECT_MANAGER.getRoleName())){
+            throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
+        }
         if(getAuth(projectId,addMemberReq.getStaffId(),addMemberReq.getRole())!= null) throw new RRException(ExceptionTypeEnum.ADD_FAIL);
         Auth authExample = setAuth(projectId,addMemberReq);
         authMapper.insertSelective(authExample);
@@ -111,12 +144,26 @@ public class AuthServiceImpl implements AuthService {
         return new PageInfo<>(list);
     }
 
+    @Override
+    @Transactional
+    public PageInfo<GetRoleRep> getRoles(String projectId, PageParam pageParam){
+        List<Auth> auth = authMapper.select(Auth.builder().projectId(projectId).build());
+        if(auth.isEmpty()) return new PageInfo<>();
+        List<GetRoleRep> list = new ArrayList<>();
+        for(Auth auth1:auth){
+            GetRoleRep roleRep = GetRoleRep.builder().staffId(auth1.getStaffId()).role(auth1.getRole()).build();
+            list.add(roleRep);
+        }
+        PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
+        return new PageInfo<>(list);
+    }
+
     /**
       * @Author Zc`
       * @Description 返回人员权限
       * @Date 18:05 2020/3/4
       * @Param [projectId, staffId, roleName]
-      * @return Auth
+      * @return auth
     **/
     public Auth getAuth(String projectId, String staffId, String roleName){
         Auth exampleAuth = Auth.builder()
@@ -130,7 +177,7 @@ public class AuthServiceImpl implements AuthService {
       * @Description 新建Auth对象
       * @Date 18:05 2020/3/4
       * @Param [projectId, addMemberReq]
-      * @return Auth
+      * @return auth
     **/
     public Auth setAuth(String projectId,AddMemberReq addMemberReq){
         Auth exampleAuth = Auth.builder()

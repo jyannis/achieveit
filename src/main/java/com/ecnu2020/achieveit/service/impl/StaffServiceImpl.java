@@ -67,7 +67,7 @@ public class StaffServiceImpl implements StaffService {
                 .filter(staff -> staff.toString().contains(keyword))
                 .map(staff -> staff.getId())
                 .collect(Collectors.toList());
-        if(id.isEmpty()) return new PageInfo<>(null);
+        if(id.isEmpty()) return new PageInfo<>();
         Example example1 = new Example(Staff.class);
         example1.createCriteria().andIn("id",id);
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
