@@ -42,14 +42,13 @@ public class StaffController {
         return staffService.getProjectStaff(projectId,keyword,pageParam);
     }
 
-    @Auth(role = RoleEnum.PROJECT_MANAGER)
     @GetMapping("/importStaff")
     @ApiOperation(value = "导入员工信息",response = PageInfo.class)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", required = true)
     })
     public Object Staff(String projectId,PageParam pageParam){
-        return staffService.importStaff(pageParam);
+        return staffService.importStaff(projectId,pageParam);
     }
 
     @Auth(role = RoleEnum.PROJECT_MANAGER)

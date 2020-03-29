@@ -136,7 +136,7 @@ public class AuthServiceImpl implements AuthService {
                 .filter(auth -> auth.toString().contains(keyword))
                 .map(auth -> auth.getId())
                 .collect(Collectors.toList());
-        if(id.isEmpty()) return new PageInfo<>(null);
+        if(id.isEmpty()) return new PageInfo<>();
         Example example1 = new Example(Auth.class);
         example1.createCriteria().andIn("id",id);
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
