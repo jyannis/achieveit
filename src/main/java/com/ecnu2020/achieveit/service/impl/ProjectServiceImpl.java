@@ -148,46 +148,51 @@ public class ProjectServiceImpl implements ProjectService {
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.INVALID_STAFF));
 
         //分配项目上级
-        AddMemberReq addMemberReq = AddMemberReq.builder()
+        Auth superiorAuth = Auth.builder()
             .staffId(superiorId)
+            .projectId(project.getId())
             .role(RoleEnum.SUPERIOR.getRoleName())
             .fileAuth((short) 2).gitAuth((short) 2).taskTimeAuth((short) 1)
             .build();
         projectMapper.insertSelective(project);
-        authService.addMemberAuth(project.getId(), addMemberReq);
+        authMapper.insertSelective(superiorAuth);
 
         //分配项目经理
         UserDTO currentUser = (UserDTO) SecurityUtils.getSubject().getPrincipal();
-        AddMemberReq manager = AddMemberReq.builder()
+        Auth manager = Auth.builder()
             .staffId(currentUser.getId())
+            .projectId(project.getId())
             .role(RoleEnum.PROJECT_MANAGER.getRoleName())
             .fileAuth((short) 2).gitAuth((short) 2).taskTimeAuth((short) 1)
             .build();
-        authService.addMemberAuth(project.getId(), manager);
+        authMapper.insertSelective(manager);
 
         //分配组织配置管理员
-        AddMemberReq configAuth = AddMemberReq.builder()
+        Auth configAuth = Auth.builder()
             .staffId(configManagerId)
+            .projectId(project.getId())
             .role(RoleEnum.CONFIGURATION_MANAGER.getRoleName())
             .fileAuth((short) 0).gitAuth((short) 0).taskTimeAuth((short) 0)
             .build();
-        authService.addMemberAuth(project.getId(), configAuth);
+        authMapper.insertSelective(configAuth);
 
         //分配QA manager
-        AddMemberReq qaAuth = AddMemberReq.builder()
+        Auth qaAuth = Auth.builder()
             .staffId(qaManagerId)
+            .projectId(project.getId())
             .role(RoleEnum.QA_MANAGER.getRoleName())
             .fileAuth((short) 0).gitAuth((short) 0).taskTimeAuth((short) 0)
             .build();
-        authService.addMemberAuth(project.getId(), qaAuth);
+        authMapper.insertSelective(qaAuth);
 
         //分配EPG leader
-        AddMemberReq epgAuth = AddMemberReq.builder()
+        Auth epgAuth = Auth.builder()
             .staffId(epgLeaderId)
+            .projectId(project.getId())
             .role(RoleEnum.EPG_LEADER.getRoleName())
             .fileAuth((short) 0).gitAuth((short) 0).taskTimeAuth((short) 0)
             .build();
-        authService.addMemberAuth(project.getId(), epgAuth);
+        authMapper.insertSelective(epgAuth);
 
         return projectMapper.selectOne(project);
     }
