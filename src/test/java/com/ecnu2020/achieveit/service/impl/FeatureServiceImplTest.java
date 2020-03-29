@@ -41,8 +41,6 @@ import tk.mybatis.mapper.mapperhelper.EntityHelper;
  * @create: 2020/03/29
  */
 @RunWith(SpringRunner.class)
-//@PowerMockRunnerDelegate(SpringRunner.class)
-//@PrepareForTest({SecurityUtils.class})//静态类mock
 @SpringBootTest(classes = AchieveitApplication.class)
 public class FeatureServiceImplTest {
     @MockBean
