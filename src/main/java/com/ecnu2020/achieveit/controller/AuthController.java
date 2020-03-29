@@ -31,7 +31,7 @@ public class AuthController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object addMemberAuth(String projectId,@RequestBody @Valid AddMemberReq addMemberReq){
+    public Object addMemberAuth(String projectId, @Valid AddMemberReq addMemberReq){
         return authService.addMemberAuth(projectId,addMemberReq);
     }
 
@@ -52,7 +52,7 @@ public class AuthController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query",required = true,dataType = "String"),
     })
-    public Object modMemberAuth(String projectId,@RequestBody @Valid AddMemberReq addMemberReq){
+    public Object modMemberAuth(String projectId,@Valid AddMemberReq addMemberReq){
         return authService.modMemberAuth(projectId,addMemberReq);
     }
 
