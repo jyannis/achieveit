@@ -9,6 +9,7 @@ import lombok.Getter;
 @Getter
 public enum ProjectStatusEnum {
 
+    WAITING("待立项"),
     BUILD("申请立项"),
     REVIEW("已立项"),
     REJECTED("已驳回"),

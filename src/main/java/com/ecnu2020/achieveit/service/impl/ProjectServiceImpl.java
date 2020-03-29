@@ -189,23 +189,46 @@ public class ProjectServiceImpl implements ProjectService {
             .build();
         authService.addMemberAuth(project.getId(), epgAuth);
 
-        //发送通知给项目上级
-        String message = String.format(BUILD_MESSAGE, currentUser.getName(), project.getName());
-        sendMail.sendStaffEmail(Arrays.asList(superiorId), BUILD_SUBJECT, message);
-
         return projectMapper.selectOne(project);
     }
 
     @Override
+    @Transactional
+    public Boolean applyBuild(String projectId) {
+        Project old = projectMapper.selectByPrimaryKey(projectId);
+        Optional.ofNullable(old)
+            .filter(p -> Arrays.asList(ProjectStatusEnum.REJECTED.getStatus(),
+                ProjectStatusEnum.WAITING.getStatus()).contains(p.getStatus()))
+            .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
+        updateStatus(old, ProjectStatusEnum.BUILD.getStatus());
+        //发送通知给项目上级
+        Example authExample=new Example(Auth.class);
+        authExample.createCriteria().andEqualTo("projectId",projectId).andEqualTo("role","项目上级");
+        String superiorId=
+            authMapper.selectByExample(authExample)
+                .stream()
+                .findAny()
+                .map(auth -> auth.getStaffId())
+                .get();
+        UserDTO currentUser = (UserDTO) SecurityUtils.getSubject().getPrincipal();
+        String message = String.format(BUILD_MESSAGE, currentUser.getName(), old.getName());
+        sendMail.sendStaffEmail(Arrays.asList(superiorId), BUILD_SUBJECT, message);
+        return true;
+    }
+
+    @Override
+    @Transactional
     public Boolean update(Project project) {
         Optional.of(projectMapper.selectByPrimaryKey(project.getId()))
             .filter(p -> Arrays.asList(ProjectStatusEnum.REVIEW.getStatus(),
-                ProjectStatusEnum.ONGOING.getStatus()).contains(p.getStatus()))
+                ProjectStatusEnum.WAITING.getStatus(),
+                ProjectStatusEnum.ONGOING.getStatus(),ProjectStatusEnum.REJECTED.getStatus()).contains(p.getStatus()))
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
         return projectMapper.updateByPrimaryKey(project) > 0;
     }
 
     @Override
+    @Transactional
     public Boolean review(String projectId, Integer status) {
         Project old = projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old).orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
@@ -214,7 +237,6 @@ public class ProjectServiceImpl implements ProjectService {
         if (status.equals(1)) {
             if (res = updateStatus(old, ProjectStatusEnum.REVIEW.getStatus())) {
                 //发送邮件给项目经理、配置管理员, EPG Leader, QA Manager
-
                 List<String> staffIdList = getStaffIdList(projectId, Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName(),
                     RoleEnum.CONFIGURATION_MANAGER.getRoleName(),
                     RoleEnum.EPG_LEADER.getRoleName(),
@@ -230,7 +252,6 @@ public class ProjectServiceImpl implements ProjectService {
         else if (status.equals(-1)) {
             if (res = updateStatus(old, ProjectStatusEnum.REJECTED.getStatus())) {
                 //发送邮件给项目经理
-
                 List<String> staffIdList = getStaffIdList(projectId,
                     Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
 
@@ -244,6 +265,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public Boolean deliver(String projectId) {
         Project old = projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old).orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
@@ -251,6 +273,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public Boolean close(String projectId) {
         Project old = projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old).orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
@@ -258,6 +281,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public Boolean apply(String projectId) {
         Project old = projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old)
@@ -280,6 +304,7 @@ public class ProjectServiceImpl implements ProjectService {
 
 
     @Override
+    @Transactional
     public Boolean file(String projectId, Integer status) {
         Project old = projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old)
@@ -302,14 +327,15 @@ public class ProjectServiceImpl implements ProjectService {
         //拒绝
         else if (status.equals(-1)) {
             //变回已完结
-            updateStatus(old, ProjectStatusEnum.CLOSE.getStatus());
-            //发送邮件给项目经理 提示归档申请未通过，需要修改后重新提交申请
-            List<String> staffIdList = getStaffIdList(projectId,
-                Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
+            if(res=updateStatus(old, ProjectStatusEnum.CLOSE.getStatus())){
+                //发送邮件给项目经理 提示归档申请未通过，需要修改后重新提交申请
+                List<String> staffIdList = getStaffIdList(projectId,
+                    Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
 
-            String message = String.format(FILE_REJECT_MESSAGE, old.getName());
+                String message = String.format(FILE_REJECT_MESSAGE, old.getName());
 
-            sendMail.sendStaffEmail(staffIdList, FILE_SUBJECT, message);
+                sendMail.sendStaffEmail(staffIdList, FILE_SUBJECT, message);
+            }
 
         } else throw new RRException(ExceptionTypeEnum.INVALID_STATUS);
         return res;
@@ -317,6 +343,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Transactional
     public Boolean delete(String projectId) {
         Project old = projectMapper.selectByPrimaryKey(projectId);
         Optional.ofNullable(old).orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
@@ -325,12 +352,23 @@ public class ProjectServiceImpl implements ProjectService {
         return true;
     }
 
-    private Boolean updateStatus(Project old, String status) {
+
+    @Override
+    @Transactional
+    public Boolean onGoing(String projectId) {
+        Project old = projectMapper.selectByPrimaryKey(projectId);
+        Optional.ofNullable(old)
+            .filter(p -> ProjectStatusEnum.REVIEW.getStatus().equals(p.getStatus()))
+            .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
+        return updateStatus(old, ProjectStatusEnum.ONGOING.getStatus());
+    }
+
+    public Boolean updateStatus(Project old, String status) {
         old.setStatus(status);
         return projectMapper.updateByPrimaryKey(old) > 0;
     }
 
-    private List<String> getStaffIdList(String projectId, List<String> roles) {
+    public List<String> getStaffIdList(String projectId, List<String> roles) {
         if (roles.isEmpty()) {
             return new ArrayList<>();
         }
@@ -348,12 +386,5 @@ public class ProjectServiceImpl implements ProjectService {
 
     }
 
-    @Override
-    public Boolean onGoing(String projectId) {
-        Project old = projectMapper.selectByPrimaryKey(projectId);
-        Optional.ofNullable(old)
-            .filter(p -> ProjectStatusEnum.REVIEW.getStatus().equals(p.getStatus()))
-            .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
-        return updateStatus(old, ProjectStatusEnum.ONGOING.getStatus());
-    }
+
 }
