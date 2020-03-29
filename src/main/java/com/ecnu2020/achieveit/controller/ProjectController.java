@@ -64,6 +64,16 @@ public class ProjectController {
     }
 
     @Auth(role = RoleEnum.PROJECT_MANAGER)
+    @PutMapping("/applyBuild")
+    @ApiOperation(value = "申请立项", response = Project.class)
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
+    })
+    public Object applyBuild(@RequestParam String projectId) {
+        return projectService.applyBuild(projectId);
+    }
+
+    @Auth(role = RoleEnum.PROJECT_MANAGER)
     @PutMapping("/update")
     @ApiOperation(value = "更新项目", response = Boolean.class)
     @ApiImplicitParams({

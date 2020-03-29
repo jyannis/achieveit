@@ -77,7 +77,7 @@ public class FeatureServiceImpl implements FeatureService {
 
     @Override
     public Boolean build(List<Feature> featureList) {
-        featureList.stream().forEach(feature -> featureMapper.insert(feature));
+        featureList.stream().forEach(feature -> featureMapper.insertSelective(feature));
         return true;
     }
 

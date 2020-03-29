@@ -33,7 +33,7 @@ public class Project{
 	private String technology;
 	private String business;
 	private String feature;
-	private String status= ProjectStatusEnum.BUILD.getStatus();
+	private String status= ProjectStatusEnum.WAITING.getStatus();
 	private String gitPath;
 	private String filePath;
 	private String vmSpace;

@@ -30,4 +30,6 @@ public interface ProjectService {
     Boolean apply(String projectId);
 
     Boolean onGoing(String projectId);
+
+    Boolean applyBuild(String projectId);
 }

@@ -3,6 +3,7 @@ package com.ecnu2020.achieveit.entity.request_response.common;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import lombok.Builder;
 import lombok.Data;
 
 /**
@@ -12,6 +13,7 @@ import lombok.Data;
  */
 @Data
 @ApiModel
+@Builder
 public class PageParam {
     @ApiModelProperty("每页显示数量 (不小于0)")
     private Integer pageSize=10;
