@@ -8,7 +8,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -17,7 +16,6 @@ import com.ecnu2020.achieveit.AchieveitApplication;
 import com.ecnu2020.achieveit.common.RRException;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
-import com.ecnu2020.achieveit.entity.Feature;
 import com.ecnu2020.achieveit.entity.Project;
 import com.ecnu2020.achieveit.entity.Staff;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
@@ -29,7 +27,6 @@ import com.ecnu2020.achieveit.mapper.ProjectMapper;
 import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.service.AuthService;
 import com.ecnu2020.achieveit.service.StaffService;
-import com.ecnu2020.achieveit.service.impl.ProjectServiceImpl;
 import com.ecnu2020.achieveit.shiro.MyRealm;
 import com.ecnu2020.achieveit.util.SendMail;
 
@@ -44,10 +41,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-import org.powermock.modules.junit4.PowerMockRunnerDelegate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -59,7 +52,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import tk.mybatis.mapper.entity.Config;
-import tk.mybatis.mapper.entity.Example;
 import tk.mybatis.mapper.mapperhelper.EntityHelper;
 
 /**
@@ -68,8 +60,6 @@ import tk.mybatis.mapper.mapperhelper.EntityHelper;
  * @create: 2020/03/28
  */
 @RunWith(SpringRunner.class)
-//@PowerMockRunnerDelegate(SpringRunner.class)
-//@PrepareForTest({SecurityUtils.class})//静态类mock
 @SpringBootTest(classes = AchieveitApplication.class)
 public class ProjectServiceImplTest {
     @MockBean
