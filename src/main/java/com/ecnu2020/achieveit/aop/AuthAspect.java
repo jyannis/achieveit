@@ -73,7 +73,7 @@ public class AuthAspect {
 
         //检查权限
         //如果要求的role是项目经理，且没传projectId，说明正在新建项目，就从员工表里匹配
-        if(acquireRole == RoleEnum.PROJECT_MANAGER && projectId == null){
+        if(acquireRole == RoleEnum.PROJECT_MANAGER && projectId == null && "build".equals(method.getName())){
             if(!authService.checkManager(principal)){
                 throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
             }
