@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -48,9 +49,11 @@ public class FeatureController {
     @PostMapping("/build")
     @ApiOperation(value = "新建功能",response = Project.class)
     @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目Id", required = true),
         @ApiImplicitParam(name = "featureList", value = "(子)功能数组", required = true),
     })
-    public Object build(@RequestBody @Validated List<Feature> featureList){
+    public Object build(@RequestParam String projectId,
+                        @RequestBody @Validated List<Feature> featureList){
         return featureService.build(featureList);
     }
 
@@ -58,9 +61,11 @@ public class FeatureController {
     @PutMapping("/update")
     @ApiOperation(value = "更新功能",response = Boolean.class)
     @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目Id", required = true),
         @ApiImplicitParam(name = "featureList", value = "(子)功能数组", required = true),
     })
-    public Object update(@RequestBody List<Feature> featureList){
+    public Object update(@RequestParam String projectId,
+                         @RequestBody List<Feature> featureList){
         return featureService.update(featureList);
     }
 
@@ -68,16 +73,18 @@ public class FeatureController {
     @DeleteMapping("/delete")
     @ApiOperation(value = "删除功能",response = Boolean.class)
     @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目Id", required = true),
         @ApiImplicitParam(name = "featureList", value = "(子)功能数组", required = true),
     })
-    public Object delete(@RequestBody List<Integer> featureIdList){
+    public Object delete(@RequestParam String projectId,
+                         @RequestBody List<Integer> featureIdList){
         return featureService.delete(featureIdList);
     }
 
     @GetMapping("/getExcel")
     @ApiOperation(value = "下载功能列表excel",response = String.class)
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "featureList", value = "(子)功能数组", required = true),
+        @ApiImplicitParam(name = "projectId", value = "项目Id", required = true)
     })
     public Object getExcel(String projectId) throws Exception {
 //        String filePath=
@@ -97,8 +104,9 @@ public class FeatureController {
     @GetMapping("/template")
     @ApiOperation(value = "下载功能模板",response = String.class)
     @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目Id", required = true)
     })
-    public Object template(){
+    public Object template(@RequestParam String projectId){
         return featureService.getTemplate();
     }
 
