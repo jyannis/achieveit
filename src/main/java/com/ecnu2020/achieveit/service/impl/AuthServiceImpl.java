@@ -82,14 +82,14 @@ public class AuthServiceImpl implements AuthService {
         Optional.ofNullable(authMapper.selectOne(auth)).orElseThrow(() -> new RRException(ExceptionTypeEnum.PERMISSION_DENIED));
         String role = authMapper.selectOne(auth).getRole();
         if(role.equals(RoleEnum.EPG_LEADER.getRoleName())){
-            addMemberReq.setRole(RoleEnum.DEVELOPER.getRoleName());
+            if(!addMemberReq.getRole().equals(RoleEnum.EPG.getRoleName())) throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
             try {
                 sendMail.sendMail(staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail(), SUBJECT, DISPUTE_EPG);
             }catch (Exception e){
                 log.warn(e.getMessage());
             }
         }else if(role.equals(RoleEnum.QA_MANAGER.getRoleName())){
-            addMemberReq.setRole(RoleEnum.TESTER.getRoleName());
+            if(!addMemberReq.getRole().equals(RoleEnum.QA.getRoleName())) throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
             try {
                 sendMail.sendMail(staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail(), SUBJECT, DISPUTE_QA);
             }catch (Exception e){

@@ -113,6 +113,7 @@ public class AuthServiceTest {
 //    @Ignore
     public void testEPGLeaderAddAuth(){
         auth.setRole(RoleEnum.EPG_LEADER.getRoleName());
+        addMemberReq.setRole(RoleEnum.EPG.getRoleName());
         project.setStatus(ProjectStatusEnum.BUILD.getStatus());
         when(authMapper.insertSelective(any())).thenReturn(1);
         when(staffMapper.selectByPrimaryKey(any())).thenReturn(staff);
@@ -129,6 +130,7 @@ public class AuthServiceTest {
 //    @Ignore
     public void testQAManagerAddAuth(){
         auth.setRole(RoleEnum.QA_MANAGER.getRoleName());
+        addMemberReq.setRole(RoleEnum.QA.getRoleName());
         project.setStatus(ProjectStatusEnum.BUILD.getStatus());
         when(authMapper.insertSelective(any())).thenReturn(1);
         when(staffMapper.selectByPrimaryKey(any())).thenReturn(staff);
