@@ -13,7 +13,7 @@ public interface StaffService {
 
     Staff login(String id, String password);
 
-    PageInfo<Staff>  importStaff(PageParam pageParam);
+    PageInfo<Staff>  importStaff(String projectId,PageParam pageParam);
 
     Boolean modStaffInfo(Staff staff);
 

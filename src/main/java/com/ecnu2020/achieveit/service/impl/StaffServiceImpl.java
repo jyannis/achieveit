@@ -1,13 +1,18 @@
 package com.ecnu2020.achieveit.service.impl;
 
+import com.ecnu2020.achieveit.common.RRException;
+import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.Staff;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
+import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
+import com.ecnu2020.achieveit.enums.RoleEnum;
 import com.ecnu2020.achieveit.mapper.AuthMapper;
 import com.ecnu2020.achieveit.mapper.StaffMapper;
 import com.ecnu2020.achieveit.service.StaffService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +43,12 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public PageInfo<Staff> importStaff(PageParam pageParam){
+    public PageInfo<Staff> importStaff(String projectId,PageParam pageParam){
+        String Role = RoleEnum.PROJECT_MANAGER.getRoleName()+RoleEnum.QA_MANAGER.getRoleName()+RoleEnum.EPG_LEADER.getRoleName();
+        UserDTO currentUser = (UserDTO) SecurityUtils.getSubject().getPrincipal();
+        Auth auth = Auth.builder().projectId(projectId).staffId(currentUser.getId()).build();
+        Auth testAuth = authMapper.selectOne(auth);
+        if(!Role.contains(testAuth.getRole())) throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
         List<Staff> staffList = staffMapper.selectAll();
         return new PageInfo<>(staffList);
