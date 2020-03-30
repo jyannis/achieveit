@@ -17,7 +17,9 @@ public enum RoleEnum {
     DEVELOPER_LEADER("开发Leader"),
     DEVELOPER("开发人员"),
     TEST_LEADER("测试Leader"),
-    TESTER("测试人员");
+    TESTER("测试人员"),
+    EPG("EPG"),
+    QA("QA");
 
 
     private String roleName;
