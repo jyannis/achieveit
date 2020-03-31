@@ -98,7 +98,7 @@ public class AuthServiceImpl implements AuthService {
         }else if(!role.equals(RoleEnum.PROJECT_MANAGER.getRoleName())){
             throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
         }
-        if(getAuth(projectId,addMemberReq.getStaffId(),addMemberReq.getRole())!= null) throw new RRException(ExceptionTypeEnum.ADD_FAIL);
+        if(getAuth(projectId,addMemberReq.getStaffId(),null)!= null) throw new RRException(ExceptionTypeEnum.ADD_FAIL);
         Auth authExample = setAuth(projectId,addMemberReq);
         authMapper.insertSelective(authExample);
         return authMapper.selectOne(authExample);
