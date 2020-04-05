@@ -90,6 +90,7 @@ public class ProjectServiceImplTest {
 
     @Before//对应jnuit5的beforeEach 4的@beforeClass对应5的beforeAll
     public void setUp() {
+        //实例化对象
         auth=Auth.builder().staffId("test").projectId("0318testPro").build();
         staff=
             Staff.builder().id("test1").password("123456").email("1234@qq.com").manager((short)1).name("staffUser").build();
@@ -99,6 +100,7 @@ public class ProjectServiceImplTest {
         project = Project.builder().id("0318testPro").business("业务1").feature("特色功能").description("描述")
             .status(ProjectStatusEnum.BUILD.getStatus()).technology("spring").deleted((short) 0).build();
 
+        //模拟登陆
         when(staffService.login(anyString(),anyString())).thenReturn(staff);
         DefaultSecurityManager securityManager=new DefaultSecurityManager();
         securityManager.setRealm(myRealm);
@@ -171,7 +173,7 @@ public class ProjectServiceImplTest {
         //Execute
         projectService.build(project,"t1","t2","t3","t4");
         verify(staffMapper, times(4)).selectByPrimaryKey(anyString());
-        verify(authService, times(5)).addMemberAuth(anyString(),any());
+        verify(authMapper, times(5)).insertSelective(any());
         verify(projectMapper).selectOne(projectArgumentCaptor.capture());
         assertEquals(project,projectArgumentCaptor.getValue());
         assertEquals("1234@qq.com",staff.getEmail());
@@ -179,13 +181,17 @@ public class ProjectServiceImplTest {
 
     @Test
     public void apply_build_when_project_exist() {
+        //1.stub
         when(projectMapper.selectByPrimaryKey(any())).thenReturn(project);
         when(authMapper.selectByExample(any())).thenReturn(Arrays.asList(auth));
         doNothing().when(sendMail).sendStaffEmail(any(),anyString(),anyString());
         ArgumentCaptor<Project> projectArgumentCaptor=ArgumentCaptor.forClass(Project.class);
-        //Execute
+
+        //2.Execute
         project.setStatus(ProjectStatusEnum.WAITING.getStatus());
         Boolean res=projectService.applyBuild(project.getId());
+
+        //3.validate
         verify(projectMapper, times(1)).updateByPrimaryKey(projectArgumentCaptor.capture());
         assertEquals(ProjectStatusEnum.BUILD.getStatus(),projectArgumentCaptor.getValue().getStatus());
         assertTrue(res);
@@ -211,6 +217,9 @@ public class ProjectServiceImplTest {
     }
 
     @Test
+    /**
+     * happy path
+     */
     public void update_when_status_valid() {
         project.setStatus(ProjectStatusEnum.REVIEW.getStatus());
         when(projectMapper.selectByPrimaryKey(anyString())).thenReturn(project);
@@ -222,6 +231,9 @@ public class ProjectServiceImplTest {
     }
 
     @Test(expected = RRException.class)
+    /**
+     * 异常场景
+     */
     public void update_when_status_invalid() {
         project.setStatus(ProjectStatusEnum.CLOSE.getStatus());
         when(projectMapper.selectByPrimaryKey(anyString())).thenReturn(project);
