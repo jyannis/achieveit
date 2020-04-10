@@ -19,6 +19,7 @@ import com.ecnu2020.achieveit.service.StaffService;
 import com.ecnu2020.achieveit.service.impl.AuthServiceImpl;
 import com.ecnu2020.achieveit.shiro.MyRealm;
 import com.ecnu2020.achieveit.util.SendMail;
+import junit.framework.TestCase;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationToken;
 import org.apache.shiro.authc.UsernamePasswordToken;
@@ -53,7 +54,7 @@ import static org.mockito.Mockito.when;
  **/
 @SpringBootTest
 @RunWith(SpringJUnit4ClassRunner.class)
-public class AuthServiceTest {
+public class AuthServiceTest extends TestCase {
 
     @Mock
     private AuthMapper authMapper;
