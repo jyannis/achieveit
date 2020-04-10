@@ -44,11 +44,13 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     public PageInfo<Staff> importStaff(String projectId,PageParam pageParam){
-        String Role = RoleEnum.PROJECT_MANAGER.getRoleName()+RoleEnum.QA_MANAGER.getRoleName()+RoleEnum.EPG_LEADER.getRoleName();
-        UserDTO currentUser = (UserDTO) SecurityUtils.getSubject().getPrincipal();
-        Auth auth = Auth.builder().projectId(projectId).staffId(currentUser.getId()).build();
-        Auth testAuth = authMapper.selectOne(auth);
-        if(!Role.contains(testAuth.getRole())) throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
+        if(projectId != null) {
+            String Role = RoleEnum.PROJECT_MANAGER.getRoleName() + RoleEnum.QA_MANAGER.getRoleName() + RoleEnum.EPG_LEADER.getRoleName();
+            UserDTO currentUser = (UserDTO) SecurityUtils.getSubject().getPrincipal();
+            Auth auth = Auth.builder().projectId(projectId).staffId(currentUser.getId()).build();
+            Auth testAuth = authMapper.selectOne(auth);
+            if (!Role.contains(testAuth.getRole())) throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
+        }
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
         List<Staff> staffList = staffMapper.selectAll();
         return new PageInfo<>(staffList);

@@ -45,7 +45,7 @@ public class StaffController {
     @GetMapping("/importStaff")
     @ApiOperation(value = "导入员工信息",response = PageInfo.class)
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "projectId", value = "项目id", required = true)
+            @ApiImplicitParam(name = "projectId", value = "项目id")
     })
     public Object Staff(String projectId,PageParam pageParam){
         return staffService.importStaff(projectId,pageParam);
