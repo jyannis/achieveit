@@ -2,6 +2,7 @@ package com.ecnu2020.achieveit.controller;
 
 import com.ecnu2020.achieveit.annotation.Auth;
 import com.ecnu2020.achieveit.entity.Project;
+import com.ecnu2020.achieveit.entity.request_response.ConfigRequest;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.entity.request_response.condition.ProjectCondition;
 import com.ecnu2020.achieveit.enums.RoleEnum;
@@ -39,7 +40,7 @@ public class ProjectController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true)
     })
-    public Object get(String projectId) {
+    public Object get(@RequestParam String projectId) {
         return projectService.get(projectId);
     }
 
@@ -77,10 +78,22 @@ public class ProjectController {
     @PutMapping("/update")
     @ApiOperation(value = "更新项目", response = Boolean.class)
     @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
         @ApiImplicitParam(name = "project", value = "项目信息", required = true),
     })
-    public Object update(@RequestBody @Validated Project project) {
+    public Object update(@RequestParam String projectId,@RequestBody @Validated Project project) {
         return projectService.update(project);
+    }
+
+    @Auth(role = RoleEnum.CONFIGURATION_MANAGER)
+    @PutMapping("/config")
+    @ApiOperation(value = "配置项目", response = Boolean.class)
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
+        @ApiImplicitParam(name = "project", value = "项目信息", required = true),
+    })
+    public Object config(@RequestParam String projectId,@RequestBody @Validated ConfigRequest configRequest) {
+        return projectService.config(configRequest);
     }
 
     @Auth(role = RoleEnum.SUPERIOR)
@@ -90,7 +103,7 @@ public class ProjectController {
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
         @ApiImplicitParam(name = "status", value = "是否批准（1=批准，-1=拒绝", required = true),
     })
-    public Object review(String projectId, Integer status) {
+    public Object review(@RequestParam String projectId, @RequestParam Integer status) {
         return projectService.review(projectId, status);
     }
 
@@ -100,7 +113,7 @@ public class ProjectController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
     })
-    public Object deliver(String projectId) {
+    public Object deliver(@RequestParam String projectId) {
         return projectService.deliver(projectId);
     }
 
@@ -110,7 +123,7 @@ public class ProjectController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
     })
-    public Object close(String projectId) {
+    public Object close(@RequestParam String projectId) {
         return projectService.close(projectId);
     }
 
@@ -120,7 +133,7 @@ public class ProjectController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
     })
-    public Object apply(String projectId) {
+    public Object apply(@RequestParam String projectId) {
         return projectService.apply(projectId);
     }
 
@@ -131,7 +144,7 @@ public class ProjectController {
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
         @ApiImplicitParam(name = "status", value = "是否批准（1=批准，-1=拒绝", required = true),
     })
-    public Object file(String projectId, Integer status) {
+    public Object file(@RequestParam String projectId, @RequestParam Integer status) {
         return projectService.file(projectId, status);
     }
 
@@ -141,7 +154,7 @@ public class ProjectController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
     })
-    public Object delete(String projectId) {
+    public Object delete(@RequestParam String projectId) {
         return projectService.delete(projectId);
     }
 
@@ -151,7 +164,7 @@ public class ProjectController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "projectId", value = "项目id", required = true),
     })
-    public Object onGoing(String projectId) {
+    public Object onGoing(@RequestParam String projectId) {
         return projectService.onGoing(projectId);
     }
 
