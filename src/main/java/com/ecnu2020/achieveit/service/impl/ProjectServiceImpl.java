@@ -6,6 +6,7 @@ import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.Project;
 import com.ecnu2020.achieveit.entity.Staff;
+import com.ecnu2020.achieveit.entity.request_response.ConfigRequest;
 import com.ecnu2020.achieveit.entity.request_response.auth.AddMemberReq;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.entity.request_response.condition.ProjectCondition;
@@ -22,6 +23,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 
 import org.apache.shiro.SecurityUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -228,6 +230,16 @@ public class ProjectServiceImpl implements ProjectService {
             .filter(p -> Arrays.asList(ProjectStatusEnum.REVIEW.getStatus(),
                 ProjectStatusEnum.WAITING.getStatus(),
                 ProjectStatusEnum.ONGOING.getStatus(),ProjectStatusEnum.REJECTED.getStatus()).contains(p.getStatus()))
+            .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
+        return projectMapper.updateByPrimaryKey(project) > 0;
+    }
+
+    @Override
+    public Boolean config(ConfigRequest configRequest) {
+        Project project= new Project();
+        BeanUtils.copyProperties(configRequest,project);
+        Optional.of(projectMapper.selectByPrimaryKey(project.getId()))
+            .filter(p -> Arrays.asList(ProjectStatusEnum.REVIEW.getStatus()).contains(p.getStatus()))
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
         return projectMapper.updateByPrimaryKey(project) > 0;
     }

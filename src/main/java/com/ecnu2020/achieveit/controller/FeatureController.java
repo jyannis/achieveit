@@ -39,7 +39,7 @@ public class FeatureController {
     @ApiOperation(value = "功能列表",response = PageInfo.class)
     @ApiImplicitParams({
     })
-    public Object list(String projectId,
+    public Object list(@RequestParam String projectId,
                        FeatureCondition featureCondition,
                        PageParam pageParam){
         return featureService.list(projectId,featureCondition,pageParam);
@@ -86,7 +86,7 @@ public class FeatureController {
     @ApiImplicitParams({
         @ApiImplicitParam(name = "projectId", value = "项目Id", required = true)
     })
-    public Object getExcel(String projectId) throws Exception {
+    public Object getExcel(@RequestParam String projectId) throws Exception {
 //        String filePath=
 //        FileSystemResource file = new FileSystemResource(filePath);
 //        HttpHeaders headers = new HttpHeaders();
