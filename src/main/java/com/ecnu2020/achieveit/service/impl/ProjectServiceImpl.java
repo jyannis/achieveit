@@ -236,12 +236,13 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public Boolean config(ConfigRequest configRequest) {
-        Project project= new Project();
-        BeanUtils.copyProperties(configRequest,project);
-        Optional.of(projectMapper.selectByPrimaryKey(project.getId()))
-            .filter(p -> Arrays.asList(ProjectStatusEnum.REVIEW.getStatus()).contains(p.getStatus()))
+        Project old= projectMapper.selectByPrimaryKey(configRequest.getId());
+        Optional.of(old)
+            .filter(p -> Arrays.asList(ProjectStatusEnum.REVIEW.getStatus(),
+                ProjectStatusEnum.ONGOING.getStatus()).contains(p.getStatus()))
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
-        return projectMapper.updateByPrimaryKey(project) > 0;
+        BeanUtils.copyProperties(configRequest,old);
+        return projectMapper.updateByPrimaryKey(old) > 0;
     }
 
     @Override
