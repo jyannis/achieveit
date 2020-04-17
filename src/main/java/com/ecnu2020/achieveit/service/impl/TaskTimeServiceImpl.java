@@ -122,7 +122,7 @@ public class TaskTimeServiceImpl implements TaskTimeService {
         Example example = new Example(Auth.class);
         example.createCriteria().andEqualTo("projectId", projectId).andEqualTo("staffId", currentUser.getId());
         Auth authExample1 = authMapper.selectOneByExample(example);
-        String str = RoleEnum.TEST_LEADER.getRoleName() + RoleEnum.TESTER.getRoleName() + RoleEnum.DEVELOPER.getRoleName();
+        String str = RoleEnum.QA_MANAGER.getRoleName() + RoleEnum.TESTER.getRoleName() + RoleEnum.DEVELOPER.getRoleName();
         if (!str.contains(authExample1.getRole()) || authExample1.getTaskTimeAuth() == 0) return true;
         return false;
     }
