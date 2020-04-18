@@ -1,5 +1,6 @@
 package com.ecnu2020.achieveit.controller;
 
+import com.ecnu2020.achieveit.dto.UserDTO;
 import io.swagger.annotations.*;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
@@ -30,7 +31,7 @@ public class LoginController {
         //尝试登陆，将会调用realm的认证方法
         SecurityUtils.getSubject().login(token);
 
-        return "success";
+        return SecurityUtils.getSubject().getPrincipal();
     }
 
 }
