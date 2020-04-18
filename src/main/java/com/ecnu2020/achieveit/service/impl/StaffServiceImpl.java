@@ -4,6 +4,7 @@ import com.ecnu2020.achieveit.common.RRException;
 import com.ecnu2020.achieveit.dto.UserDTO;
 import com.ecnu2020.achieveit.entity.Auth;
 import com.ecnu2020.achieveit.entity.Staff;
+import com.ecnu2020.achieveit.entity.request_response.StaffVO;
 import com.ecnu2020.achieveit.entity.request_response.common.PageParam;
 import com.ecnu2020.achieveit.enums.ExceptionTypeEnum;
 import com.ecnu2020.achieveit.enums.RoleEnum;
@@ -13,12 +14,15 @@ import com.ecnu2020.achieveit.service.StaffService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.apache.shiro.SecurityUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -65,12 +69,15 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public PageInfo<Staff> getProjectStaff(String projectId, String keyword, PageParam pageParam) {
+    public PageInfo<StaffVO> getProjectStaff(String projectId, String keyword, PageParam pageParam) {
         Auth authExample = Auth.builder().projectId(projectId).build();
         List<String> staffId = authMapper.select(authExample)
                 .stream()
                 .map(auth ->  auth.getStaffId())
                 .collect(Collectors.toList());
+        Map<String,String> staffRoleMap = authMapper.select(authExample)
+            .stream()
+            .collect(Collectors.toMap(Auth::getStaffId, Auth::getRole));
         if(staffId.isEmpty()) return new PageInfo<>();
         Example example = new Example(Staff.class);
         example.createCriteria().andIn("id",staffId);
@@ -84,6 +91,19 @@ public class StaffServiceImpl implements StaffService {
         example1.createCriteria().andIn("id",id);
         PageHelper.startPage(pageParam.getPageNum(),pageParam.getPageSize(),pageParam.getOrderBy());
         List<Staff> stafflist = staffMapper.selectByExample(example1);
-        return new PageInfo<>(stafflist);
+        List<StaffVO> staffVOList=new ArrayList<>();
+        stafflist.stream()
+            .forEach(staff -> {
+                StaffVO staffVO=new StaffVO();
+                BeanUtils.copyProperties(staff,staffVO);
+                staffVO.setRole(staffRoleMap.get(staff.getId()));
+                staffVOList.add(staffVO);
+            });
+        PageInfo<Staff> origin=new PageInfo<>(stafflist);
+        PageInfo<StaffVO> res=new PageInfo<>();
+        BeanUtils.copyProperties(origin,res);
+        res.setList(staffVOList);
+
+        return res;
     }
 }
