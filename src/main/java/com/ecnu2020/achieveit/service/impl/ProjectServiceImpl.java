@@ -59,30 +59,29 @@ public class ProjectServiceImpl implements ProjectService {
     @Autowired
     private SendMail sendMail;
 
-    private static final String BUILD_MESSAGE = "%s正在申请立项：%s，请审批。";
+    private static final String BUILD_MESSAGE = "用户%s，%s正在申请立项：%s，请审批。";
 
     private static final String BUILD_SUBJECT = "申请立项审批通知";
 
-    private static final String REVIEW_APPROVE_MESSAGE = "您的项目：%s，已审核通过。";
+    private static final String REVIEW_APPROVE_MESSAGE = "用户%s，您的项目：%s，已审核通过。";
 
     private static final String REVIEW_SUBJECT = "立项审核结果通知";
 
-    private static final String REVIEW_REJECT_MESSAGE = "您的项目：%s，被项目上级驳回，立项失败。";
+    private static final String REVIEW_REJECT_MESSAGE = "用户%s，您的项目：%s，被项目上级驳回，立项失败。";
 
-    private static final String APPLY_MESSAGE = "项目：%s已提交归档申请，请审核。";
+    private static final String APPLY_MESSAGE = "用户%s，项目：%s已提交归档申请，请审核。";
 
     private static final String APPLY_SUBJECT = "归档申请审批通知";
 
-    private static final String FILE_APPROVE_MESSAGE = "您的项目：%s，已通过归档申请。";
+    private static final String FILE_APPROVE_MESSAGE = "用户%s，您的项目：%s，已通过归档申请。";
 
     private static final String FILE_SUBJECT = "归档申请审核结果通知";
 
-    private static final String FILE_REJECT_MESSAGE = "您的项目：%s，没有通过归档申请，请与配置管理员协商并修改归档资料，重新申请。";
+    private static final String FILE_REJECT_MESSAGE = "用户%s，您的项目：%s，没有通过归档申请，请与配置管理员协商并修改归档资料，重新申请。";
 
     private static final String CONFIG_SUBJECT = "项目配置通知";
 
-    private static final String CONFIG_MESSAGE = "您的项目：%s，配置库已完成。";
-
+    private static final String CONFIG_MESSAGE = "用户%s，您的项目：%s，配置库已完成。";
 
 
     @Override
@@ -214,16 +213,18 @@ public class ProjectServiceImpl implements ProjectService {
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECTID_INVALID));
         updateStatus(old, ProjectStatusEnum.BUILD.getStatus());
         //发送通知给项目上级
-        Example authExample=new Example(Auth.class);
-        authExample.createCriteria().andEqualTo("projectId",projectId).andEqualTo("role","项目上级");
-        String superiorId=
+        Example authExample = new Example(Auth.class);
+        authExample.createCriteria().andEqualTo("projectId", projectId).andEqualTo("role", "项目上级");
+        String superiorId =
             authMapper.selectByExample(authExample)
                 .stream()
                 .findAny()
                 .map(auth -> auth.getStaffId())
                 .get();
+        Staff superior = staffMapper.selectByPrimaryKey(superiorId);
         UserDTO currentUser = (UserDTO) SecurityUtils.getSubject().getPrincipal();
-        String message = String.format(BUILD_MESSAGE, currentUser.getName(), old.getName());
+        String message = String.format(BUILD_MESSAGE, superior.getName(), currentUser.getName(),
+            old.getName());
         sendMail.sendStaffEmail(Arrays.asList(superiorId), BUILD_SUBJECT, message);
         return true;
     }
@@ -234,26 +235,29 @@ public class ProjectServiceImpl implements ProjectService {
         Optional.of(projectMapper.selectByPrimaryKey(project.getId()))
             .filter(p -> Arrays.asList(ProjectStatusEnum.REVIEW.getStatus(),
                 ProjectStatusEnum.WAITING.getStatus(),
-                ProjectStatusEnum.ONGOING.getStatus(),ProjectStatusEnum.REJECTED.getStatus()).contains(p.getStatus()))
+                ProjectStatusEnum.ONGOING.getStatus(), ProjectStatusEnum.REJECTED.getStatus()).contains(p.getStatus()))
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
         return projectMapper.updateByPrimaryKey(project) > 0;
     }
 
     @Override
     public Boolean config(ConfigRequest configRequest) {
-        Project old= projectMapper.selectByPrimaryKey(configRequest.getId());
+        Project old = projectMapper.selectByPrimaryKey(configRequest.getId());
         Optional.of(old)
             .filter(p -> Arrays.asList(ProjectStatusEnum.REVIEW.getStatus(),
                 ProjectStatusEnum.ONGOING.getStatus()).contains(p.getStatus()))
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
-        BeanUtils.copyProperties(configRequest,old);
+        BeanUtils.copyProperties(configRequest, old);
         projectMapper.updateByPrimaryKey(old);
 
         //发送邮件给项目经理
-        List<String> staffIdList = getStaffIdList(old.getId(),
+        List<Staff> staffList = getStaffList(old.getId(),
             Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
-        String message = String.format(CONFIG_MESSAGE, old.getName());
-        sendMail.sendStaffEmail(staffIdList, CONFIG_SUBJECT, message);
+        staffList.forEach(staff -> {
+            String message = String.format(CONFIG_MESSAGE, staff.getName(), old.getName());
+            sendMail.sendStaffEmail(Arrays.asList(staff.getId()), CONFIG_SUBJECT, message);
+        });
+
         return true;
     }
 
@@ -267,14 +271,17 @@ public class ProjectServiceImpl implements ProjectService {
         if (status.equals(1)) {
             if (res = updateStatus(old, ProjectStatusEnum.REVIEW.getStatus())) {
                 //发送邮件给项目经理、配置管理员, EPG Leader, QA Manager
-                List<String> staffIdList = getStaffIdList(projectId, Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName(),
-                    RoleEnum.CONFIGURATION_MANAGER.getRoleName(),
-                    RoleEnum.EPG_LEADER.getRoleName(),
-                    RoleEnum.QA_MANAGER.getRoleName()));
+                List<Staff> staffList = getStaffList(projectId,
+                    Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName(),
+                        RoleEnum.CONFIGURATION_MANAGER.getRoleName(),
+                        RoleEnum.EPG_LEADER.getRoleName(),
+                        RoleEnum.QA_MANAGER.getRoleName()));
 
-                String message = String.format(REVIEW_APPROVE_MESSAGE, old.getName());
-
-                sendMail.sendStaffEmail(staffIdList, REVIEW_SUBJECT, message);
+                staffList.forEach(staff -> {
+                    String message = String.format(REVIEW_APPROVE_MESSAGE, staff.getName(),
+                        old.getName());
+                    sendMail.sendStaffEmail(Arrays.asList(staff.getId()), REVIEW_SUBJECT, message);
+                });
 
             }
         }
@@ -282,13 +289,13 @@ public class ProjectServiceImpl implements ProjectService {
         else if (status.equals(-1)) {
             if (res = updateStatus(old, ProjectStatusEnum.REJECTED.getStatus())) {
                 //发送邮件给项目经理
-                List<String> staffIdList = getStaffIdList(projectId,
+                List<Staff> staffList = getStaffList(projectId,
                     Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
-
-                String message = String.format(REVIEW_REJECT_MESSAGE, old.getName());
-
-                sendMail.sendStaffEmail(staffIdList, REVIEW_SUBJECT, message);
-
+                staffList.forEach(staff -> {
+                    String message = String.format(REVIEW_REJECT_MESSAGE, staff.getName(),
+                        old.getName());
+                    sendMail.sendStaffEmail(Arrays.asList(staff.getId()), REVIEW_SUBJECT, message);
+                });
             }
         } else throw new RRException(ExceptionTypeEnum.INVALID_STATUS);
         return res;
@@ -321,12 +328,14 @@ public class ProjectServiceImpl implements ProjectService {
         Boolean res;
         if (res = updateStatus(old, ProjectStatusEnum.APPLY.getStatus())) {
             //发送邮件给组织配置管理员
-            List<String> staffIdList = getStaffIdList(projectId,
+            List<Staff> staffList = getStaffList(projectId,
                 Arrays.asList(RoleEnum.CONFIGURATION_MANAGER.getRoleName()));
 
-            String message = String.format(APPLY_MESSAGE, old.getName());
+            staffList.forEach(staff -> {
+                String message = String.format(APPLY_MESSAGE, staff.getName(), old.getName());
+                sendMail.sendStaffEmail(Arrays.asList(staff.getId()), APPLY_SUBJECT, message);
+            });
 
-            sendMail.sendStaffEmail(staffIdList, APPLY_SUBJECT, message);
 
         }
         return res;
@@ -346,25 +355,30 @@ public class ProjectServiceImpl implements ProjectService {
         if (status.equals(1)) {
             if (res = updateStatus(old, ProjectStatusEnum.FILE.getStatus())) {
                 //发送邮件给项目经理，通知归档申请已通过
-                List<String> staffIdList = getStaffIdList(projectId,
+                List<Staff> staffList = getStaffList(projectId,
                     Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
 
-                String message = String.format(FILE_APPROVE_MESSAGE, old.getName());
+                staffList.forEach(staff -> {
+                    String message = String.format(FILE_APPROVE_MESSAGE, staff.getName(),
+                        old.getName());
+                    sendMail.sendStaffEmail(Arrays.asList(staff.getId()), FILE_SUBJECT, message);
+                });
 
-                sendMail.sendStaffEmail(staffIdList, FILE_SUBJECT, message);
             }
         }
         //拒绝
         else if (status.equals(-1)) {
             //变回已完结
-            if(res=updateStatus(old, ProjectStatusEnum.CLOSE.getStatus())){
+            if (res = updateStatus(old, ProjectStatusEnum.CLOSE.getStatus())) {
                 //发送邮件给项目经理 提示归档申请未通过，需要修改后重新提交申请
-                List<String> staffIdList = getStaffIdList(projectId,
+                List<Staff> staffList = getStaffList(projectId,
                     Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
+                staffList.forEach(staff -> {
+                    String message = String.format(FILE_REJECT_MESSAGE, staff.getName(),
+                        old.getName());
+                    sendMail.sendStaffEmail(Arrays.asList(staff.getId()), FILE_SUBJECT, message);
+                });
 
-                String message = String.format(FILE_REJECT_MESSAGE, old.getName());
-
-                sendMail.sendStaffEmail(staffIdList, FILE_SUBJECT, message);
             }
 
         } else throw new RRException(ExceptionTypeEnum.INVALID_STATUS);
@@ -398,21 +412,27 @@ public class ProjectServiceImpl implements ProjectService {
         return projectMapper.updateByPrimaryKey(old) > 0;
     }
 
-    public List<String> getStaffIdList(String projectId, List<String> roles) {
+    public List<Staff> getStaffList(String projectId, List<String> roles) {
         if (roles.isEmpty()) {
             return new ArrayList<>();
         }
         Example authExample = new Example(Auth.class);
         authExample.createCriteria().andEqualTo("projectId", projectId).andIn("role",
             roles);
+        List<Staff> staffList = new ArrayList<>();
 
-        List<String> staffIdList = authMapper.selectByExample(authExample)
+        authMapper.selectByExample(authExample)
             .stream()
             .map(auth -> auth.getStaffId())
             .distinct()
-            .collect(Collectors.toList());
+            .collect(Collectors.toList())
+            .forEach(staffId -> {
+                Staff staff = staffMapper.selectByPrimaryKey(staffId);
+                staffList.add(staff);
+            });
 
-        return staffIdList;
+
+        return staffList;
 
     }
 
