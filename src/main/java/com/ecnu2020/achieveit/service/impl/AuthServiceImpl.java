@@ -50,8 +50,8 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     SendMail sendMail;
 
-    private static final String DISPUTE_EPG = "已分配 EPG";
-    private static final String DISPUTE_QA = "已分配 QA";
+    private static final String DISPUTE_EPG = "用户%s,您的项目：%s已分配 EPG";
+    private static final String DISPUTE_QA = "用户%s,您的项目：%s已分配 QA";
     private static final String SUBJECT = "项目人员变更";
 
     @Override
@@ -84,14 +84,14 @@ public class AuthServiceImpl implements AuthService {
         if(role.equals(RoleEnum.EPG_LEADER.getRoleName())){
             if(!addMemberReq.getRole().equals(RoleEnum.EPG.getRoleName())) throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
             try {
-                sendMail.sendMail(staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail(), SUBJECT, DISPUTE_EPG);
+                sendMail.sendMail(staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail(), SUBJECT, String.format(DISPUTE_EPG, userDTO.getName(), projectId));
             }catch (Exception e){
                 log.warn(e.getMessage());
             }
         }else if(role.equals(RoleEnum.QA_MANAGER.getRoleName())){
             if(!addMemberReq.getRole().equals(RoleEnum.QA.getRoleName())) throw new RRException(ExceptionTypeEnum.PERMISSION_DENIED);
             try {
-                sendMail.sendMail(staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail(), SUBJECT, DISPUTE_QA);
+                sendMail.sendMail(staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail(), SUBJECT, String.format(DISPUTE_QA,userDTO.getName(),projectId));
             }catch (Exception e){
                 log.warn(e.getMessage());
             }
