@@ -501,7 +501,7 @@ public class ProjectServiceImplTest {
             .map(auth -> auth.getProjectId())
             .collect(Collectors.toList())).thenReturn(Arrays.asList(staff.getId()));
         //Execute
-        List<String> res=projectService.getStaffIdList(project.getId(),new ArrayList<>());
+        List<Staff> res=projectService.getStaffList(project.getId(),new ArrayList<>());
         verify(authMapper, times(0)).selectByExample(any());
         assertEquals(0,res.size());
     }
@@ -510,7 +510,7 @@ public class ProjectServiceImplTest {
     public void should_return_list_when_roles_not_empty() {
         when(authMapper.selectByExample(any())).thenReturn(Arrays.asList(auth));
         //Execute
-        List<String> res=projectService.getStaffIdList(project.getId(),
+        List<Staff> res=projectService.getStaffList(project.getId(),
             Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
         verify(authMapper, times(1)).selectByExample(any());
         assertEquals(1,res.size());
