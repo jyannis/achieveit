@@ -77,7 +77,12 @@ public class ProjectServiceImpl implements ProjectService {
 
     private static final String FILE_SUBJECT = "归档申请审核结果通知";
 
-    private static final String FILE_REJECT_MESSAGE = "您的项目：%s，没有通过归档申请，请于配置管理员协商并修改归档资料，然后重新申请。";
+    private static final String FILE_REJECT_MESSAGE = "您的项目：%s，没有通过归档申请，请与配置管理员协商并修改归档资料，重新申请。";
+
+    private static final String CONFIG_SUBJECT = "项目配置通知";
+
+    private static final String CONFIG_MESSAGE = "您的项目：%s，配置库已完成。";
+
 
 
     @Override
@@ -242,7 +247,14 @@ public class ProjectServiceImpl implements ProjectService {
                 ProjectStatusEnum.ONGOING.getStatus()).contains(p.getStatus()))
             .orElseThrow(() -> new RRException(ExceptionTypeEnum.PROJECT_STATUS_ERROR));
         BeanUtils.copyProperties(configRequest,old);
-        return projectMapper.updateByPrimaryKey(old) > 0;
+        projectMapper.updateByPrimaryKey(old);
+
+        //发送邮件给项目经理
+        List<String> staffIdList = getStaffIdList(old.getId(),
+            Arrays.asList(RoleEnum.PROJECT_MANAGER.getRoleName()));
+        String message = String.format(CONFIG_MESSAGE, old.getName());
+        sendMail.sendStaffEmail(staffIdList, CONFIG_SUBJECT, message);
+        return true;
     }
 
     @Override
