@@ -133,7 +133,7 @@ public class TaskTimeServiceImpl implements TaskTimeService {
    **/
     private void sendFailMail(Timestamp timestamp){
         UserDTO userDTO = (UserDTO)SecurityUtils.getSubject().getPrincipal();
-        String failMessage = "您提交的" + timestamp + "工时信息未通过审核，请修改后重新提交";
+        String failMessage ="用户" + userDTO.getName() + ",您提交的" + timestamp + "工时信息未通过审核，请修改后重新提交";
         String targetMail = staffMapper.selectByPrimaryKey(userDTO.getId()).getEmail();
         String failSubject = "工时信息未通过审核";
         try {
